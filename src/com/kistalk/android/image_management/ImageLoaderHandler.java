@@ -2,7 +2,6 @@ package com.kistalk.android.image_management;
 
 import java.util.LinkedList;
 
-import com.kistalk.android.activity.FeedActivity;
 import com.kistalk.android.util.Constant;
 
 import android.graphics.Bitmap;

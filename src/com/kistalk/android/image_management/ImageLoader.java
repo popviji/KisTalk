@@ -1,20 +1,14 @@
 package com.kistalk.android.image_management;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import com.kistalk.android.R;
-import com.kistalk.android.activity.FeedActivity;
 import com.kistalk.android.util.Constant;
 import com.kistalk.android.util.KT_TransferManager;
 
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
-import android.widget.ImageView;
 
 /**
  * An background image loader. If the image to be loaded is present in the

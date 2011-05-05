@@ -3,7 +3,6 @@ package com.kistalk.android.activity.kt_extensions;
 
 import com.kistalk.android.R;
 import com.kistalk.android.activity.FeedActivity;
-import com.kistalk.android.image_management.ImageLoader;
 import com.kistalk.android.util.Constant;
 
 import android.content.Context;

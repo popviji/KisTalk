@@ -17,7 +17,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class ThreadActivity extends ListActivity implements Constant {
+public class CommentThreadActivity extends ListActivity implements Constant {
 
 	private int itemId;
 	private ImageController imageController;
@@ -127,7 +127,7 @@ public class ThreadActivity extends ListActivity implements Constant {
 					public void onClick(View v) {
 						KT_UploadMessage message = new KT_UploadMessage(null, ((EditText) findViewById(R.id.inputbox))
 										.getText().toString(), itemId, UPLOAD_COMMENT_MESSAGE_TAG);
-						new UploadTask(ThreadActivity.this)
+						new UploadTask(CommentThreadActivity.this)
 								.execute(message);
 
 					}

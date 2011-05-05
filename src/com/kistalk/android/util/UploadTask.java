@@ -87,17 +87,23 @@ public class UploadTask extends AsyncTask<KT_UploadMessage, Void, String>
 		KT_TransferManager transferManager = new KT_TransferManager();
 		int count = messages.length;
 		int index = 0;
+		
+		String status = "Upload failed";
 
 		/* If not cancelled or not gone through all items - do work */
 		while (!isCancelled() && index < count) {
 			Log.i(LOG_TAG, "Uploading message");
-			if (messages[index].getMessageTag() == UPLOAD_PHOTO_MESSAGE_TAG)
-				transferManager.uploadPhotoMessage(messages[index]);
-			else if (messages[index].getMessageTag() == UPLOAD_COMMENT_MESSAGE_TAG)
-				transferManager.uploadComment(messages[index]);
+			if (messages[index].getMessageTag() == UPLOAD_PHOTO_MESSAGE_TAG) {
+				if (transferManager.uploadPhotoMessage(messages[index]))
+					status = "Upload complete!";
+			}
+			else if (messages[index].getMessageTag() == UPLOAD_COMMENT_MESSAGE_TAG) {
+				if (transferManager.uploadComment(messages[index]))
+					status = "Upload complete!";
+			}
 			index++;
 		}
-		return "Upload complete!";
+		return status;
 	}
 
 	@Override
