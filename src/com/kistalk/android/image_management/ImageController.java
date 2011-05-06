@@ -92,4 +92,8 @@ public class ImageController implements Constant {
 	public void setCacheHashMap(HashMap<String, String> hashMap) {
 		imageCache.setHashMap(hashMap);
 	}
+
+	public void killExecutor() {
+		executor.shutdown();
+	}
 }

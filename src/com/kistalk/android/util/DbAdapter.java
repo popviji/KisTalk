@@ -82,14 +82,18 @@ public class DbAdapter implements Constant {
 	}
 
 	public DbAdapter open() throws SQLException {
+		lockAndGetDBPointer();
 		mDbHelper = new DatabaseHelper(mCtx);
 		mDb = mDbHelper.getWritableDatabase();
+		unlockDBPointer();
 
 		return this;
 	}
 
 	public void close() {
+		lockAndGetDBPointer();
 		mDbHelper.close();
+		unlockDBPointer();
 	}
 
 	public void insertComments(LinkedList<ContentValues> comments) {

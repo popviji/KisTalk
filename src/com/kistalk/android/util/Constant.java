@@ -80,4 +80,7 @@ public interface Constant {
 			"Choose existing photo", "Capture a photo" };
 	public static final int DIALOG_CHOOSE_OPTION_ID = 11;
 	public static final int DIALOG_LOGOUT = 13;
+	
+	
+	public static final String KEY_REFRESHING_POSTS = "KEY_REFRESHING_POSTS";
 }

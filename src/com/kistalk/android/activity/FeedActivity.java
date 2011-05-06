@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.concurrent.Executor;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -56,16 +57,15 @@ public class FeedActivity extends ListActivity implements Constant {
 	private static String username;
 	private static String token;
 
-	private Uri tempFile;
+	private File tempFile;
 
 	Animation rotate;
 
 	// private instances of classes
 	public static DbAdapter dbAdapter;
-	public static ImageController imageController = new ImageController();
+	public static ImageController imageController;
 
 	private SharedPreferences sp;
-	private boolean refreshingPosts;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -79,13 +79,15 @@ public class FeedActivity extends ListActivity implements Constant {
 		setOnClickListeners();
 		loadAnimations();
 
-		dbAdapter.open();
 		restoreImageCache(savedInstanceState);
 
 		sp = getPreferences(MODE_PRIVATE);
 
 		username = sp.getString(ARG_USERNAME, null);
 		token = sp.getString(ARG_TOKEN, null);
+
+		if (savedInstanceState == null)
+			sp.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
 
 		validateCredentials();
 	}
@@ -144,10 +146,16 @@ public class FeedActivity extends ListActivity implements Constant {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		dbAdapter.close();
+		imageController.killExecutor();
+		if (isFinishing()) {
+			imageController.clearCache();
+			if (tempFile.exists())
+				tempFile.delete();
+		}
 	}
 
-	public void populateList() {
+	public synchronized void populateList() {
+		dbAdapter.open();
 		Cursor cur = dbAdapter.fetchAllPosts();
 
 		String[] displayFields = new String[] { KEY_ITEM_USER_NAME,
@@ -161,6 +169,9 @@ public class FeedActivity extends ListActivity implements Constant {
 				R.layout.feed_item_layout, cur, displayFields, displayViews);
 
 		setListAdapter(adapter);
+
+		dbAdapter.close();
+
 	}
 
 	@Override
@@ -172,7 +183,7 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-		outState.putSerializable("ImageCache",
+		outState.putSerializable(KEY_IMAGE_CACHE_HASHMAP,
 				imageController.getCacheHashMap());
 	}
 
@@ -217,9 +228,9 @@ public class FeedActivity extends ListActivity implements Constant {
 	private void initializeVariables() {
 		cacheDir = getCacheDir();
 		filesDir = getFilesDir();
+
 		dbAdapter = new DbAdapter(this);
 		imageController = new ImageController();
-		refreshingPosts = false;
 	}
 
 	/*
@@ -334,20 +345,15 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	private void takePhotoAction() {
 		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-		// String filename = "temp.tmp";
-		// ContentValues values = new ContentValues();
-		// values.put(MediaStore.Images.Media.TITLE, filename);
-		// tempFile = getContentResolver().insert(
-		// MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+		if (tempFile != null && tempFile.exists())
+			tempFile.delete();
 		try {
-			tempFile = Uri.fromFile(File.createTempFile("image", ".jpg"));
+			tempFile = File.createTempFile("image", ".jpg");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		intent.putExtra(MediaStore.EXTRA_OUTPUT, tempFile);
+		intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(tempFile));
 		startActivityForResult(intent, REQUEST_GET_CAMERA_PIC);
 
 	}
@@ -379,15 +385,15 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	private void refreshPosts() {
 
-		if (!refreshingPosts) {
-			refreshingPosts = true;
+		if (!sp.getBoolean(KEY_REFRESHING_POSTS, false)) {
+			sp.edit().putBoolean(KEY_REFRESHING_POSTS, true).commit();
 			findViewById(R.id.refresh_button).setVisibility(View.VISIBLE);
 			findViewById(R.id.refresh_button).startAnimation(rotate);
 
-			new AsyncTask<Void, Void, Boolean>() {
+			new AsyncTask<DbAdapter, Void, Boolean>() {
 
 				@Override
-				protected Boolean doInBackground(Void... params) {
+				protected Boolean doInBackground(DbAdapter... dbAdapters) {
 					try {
 						LinkedList<FeedItem> feedItems = KT_XMLParser
 								.fetchAndParse();
@@ -397,12 +403,14 @@ public class FeedActivity extends ListActivity implements Constant {
 							return false;
 						}
 
-						dbAdapter.deleteAll();
+						dbAdapters[0].open();
+						dbAdapters[0].deleteAll();
 
 						for (FeedItem feedItem : feedItems) {
-							dbAdapter.insertPost(feedItem.post);
-							dbAdapter.insertComments(feedItem.comments);
+							dbAdapters[0].insertPost(feedItem.post);
+							dbAdapters[0].insertComments(feedItem.comments);
 						}
+						dbAdapters[0].close();
 						return true;
 					} catch (XmlPullParserException e) {
 						Log.e(LOG_TAG, "" + e, e);
@@ -416,7 +424,7 @@ public class FeedActivity extends ListActivity implements Constant {
 
 				@Override
 				protected void onPostExecute(Boolean successful) {
-					refreshingPosts = false;
+					sp.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
 					findViewById(R.id.refresh_button).clearAnimation();
 					findViewById(R.id.refresh_button).setVisibility(
 							View.INVISIBLE);
@@ -425,8 +433,9 @@ public class FeedActivity extends ListActivity implements Constant {
 					} else
 						Toast.makeText(FeedActivity.this, "Refresh failed",
 								Toast.LENGTH_SHORT).show();
+					cancel(true);
 				}
-			}.execute((Void[]) null);
+			}.execute(dbAdapter);
 		}
 	}
 
@@ -453,19 +462,7 @@ public class FeedActivity extends ListActivity implements Constant {
 
 		case REQUEST_GET_CAMERA_PIC:
 			if (resultCode == RESULT_OK) {
-				// String realPath = getRealPathFromUri(tempFile);
-				String uriString = tempFile.toString();
-				URI uRI = null;
-				try {
-					uRI = new URI(uriString);
-				} catch (URISyntaxException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				File f = new File(uRI);
-				String fileString = f.toString();
-
-				showUploadView(fileString);
+				showUploadView(tempFile.toString());
 			}
 			break;
 		case REQUEST_CHOOSE_IMAGE:

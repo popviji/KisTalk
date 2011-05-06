@@ -5,6 +5,7 @@ import com.kistalk.android.activity.kt_extensions.KT_SimpleCursorAdapter;
 import com.kistalk.android.base.KT_UploadMessage;
 import com.kistalk.android.image_management.ImageController;
 import com.kistalk.android.util.Constant;
+import com.kistalk.android.util.DbAdapter;
 import com.kistalk.android.util.UploadTask;
 
 
@@ -21,9 +22,11 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 	private int itemId;
 	private ImageController imageController;
+	private DbAdapter dbAdapter;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		dbAdapter = new DbAdapter(this);
 		super.onCreate(savedInstanceState);
 		itemId = getIntent().getIntExtra(KEY_ITEM_ID, 0);
 		setContentView(R.layout.thread_view_layout);
@@ -73,8 +76,9 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 				R.layout.thread_feed_item_layout, null);
 
 		// query database
-		Cursor cur = FeedActivity.dbAdapter.fetchPostFromId(itemId);
-
+		dbAdapter.open();
+		Cursor cur = dbAdapter.fetchPostFromId(itemId);
+		
 		// Extract fields from cursor
 		String imageUrl = cur.getString(cur.getColumnIndex(KEY_ITEM_URL_BIG));
 		String userName = cur.getString(cur.getColumnIndex(KEY_ITEM_USER_NAME));
@@ -83,6 +87,8 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		String description = cur.getString(cur
 				.getColumnIndex(KEY_ITEM_DESCRIPTION));
 		String date = cur.getString(cur.getColumnIndex(KEY_ITEM_DATE));
+		
+		dbAdapter.close();
 
 		// Set views
 		imageController.start(imageUrl,
@@ -100,7 +106,8 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 	private synchronized void populateList() {
 
-		Cursor cur = FeedActivity.dbAdapter.fetchComments(itemId);
+		dbAdapter.open();
+		Cursor cur = dbAdapter.fetchComments(itemId);
 
 		String[] displayFields = new String[] { KEY_COM_USER_NAME,
 				KEY_COM_USER_AVATAR, KEY_COM_CONTENT, KEY_COM_DATE };
@@ -110,8 +117,10 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 		KT_SimpleCursorAdapter adapter = new KT_SimpleCursorAdapter(this,
 				R.layout.comment_item_layout, cur, displayFields, displayViews);
-
+		
 		setListAdapter(adapter);
+		
+		dbAdapter.close();
 	}
 
 	private synchronized void addCommentForm() {
