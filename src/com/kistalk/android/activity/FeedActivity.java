@@ -70,7 +70,7 @@ public class FeedActivity extends ListActivity implements Constant {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		initializeVariables();
 		startUpCheck();
 
@@ -207,7 +207,8 @@ public class FeedActivity extends ListActivity implements Constant {
 	}
 
 	private void logout() {
-		Toast.makeText(this, "Your are now logged out", Toast.LENGTH_LONG).show();
+		Toast.makeText(this, "Your are now logged out", Toast.LENGTH_LONG)
+				.show();
 	}
 
 	private void setFocusListeners() {
@@ -318,7 +319,8 @@ public class FeedActivity extends ListActivity implements Constant {
 
 		case DIALOG_LOGOUT:
 			AlertDialog.Builder secondBuilder = new AlertDialog.Builder(this);
-			secondBuilder.setMessage("Are you sure you want to logout?")
+			secondBuilder
+					.setMessage("Are you sure you want to logout?")
 					.setCancelable(false)
 					.setPositiveButton("Yes",
 							new DialogInterface.OnClickListener() {
@@ -400,17 +402,17 @@ public class FeedActivity extends ListActivity implements Constant {
 			findViewById(R.id.refresh_button).setVisibility(View.VISIBLE);
 			findViewById(R.id.refresh_button).startAnimation(rotate);
 
-			new AsyncTask<Void, Void, Void>() {
+			new AsyncTask<Void, Void, Boolean>() {
 
 				@Override
-				protected Void doInBackground(Void... params) {
+				protected Boolean doInBackground(Void... params) {
 					try {
 						LinkedList<FeedItem> feedItems = KT_XMLParser
 								.fetchAndParse();
 
 						if (feedItems == null) {
 							Log.e(LOG_TAG, "Problem when downloading XML file");
-							return null;
+							return false;
 						}
 
 						dbAdapter.deleteAll();
@@ -418,6 +420,7 @@ public class FeedActivity extends ListActivity implements Constant {
 						for (FeedItem feedItem : feedItems) {
 							dbAdapter.insertPost(feedItem.post);
 							dbAdapter.insertComments(feedItem.comments);
+							return true;
 						}
 					} catch (XmlPullParserException e) {
 						Log.e(LOG_TAG, "" + e, e);
@@ -427,16 +430,20 @@ public class FeedActivity extends ListActivity implements Constant {
 						Log.e(LOG_TAG, "" + e, e);
 					}
 
-					return null;
+					return false;
 				}
 
 				@Override
-				protected void onPostExecute(Void result) {
-					populateList();
+				protected void onPostExecute(Boolean successful) {
 					refreshingPosts = false;
 					findViewById(R.id.refresh_button).clearAnimation();
 					findViewById(R.id.refresh_button).setVisibility(
 							View.INVISIBLE);
+					if (successful) {
+						populateList();
+					} else
+						Toast.makeText(FeedActivity.this, "Refresh failed",
+								Toast.LENGTH_SHORT).show();
 				}
 			}.execute((Void[]) null);
 		}

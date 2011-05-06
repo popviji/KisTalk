@@ -18,20 +18,21 @@ public final class R {
     public static final class drawable {
         public static final int app_background=0x7f020000;
         public static final int bg=0x7f020001;
-        public static final int failed_to_download=0x7f020002;
-        public static final int ic_menu_camera=0x7f020003;
-        public static final int ic_menu_refresh=0x7f020004;
-        public static final int ic_menu_upload=0x7f020005;
-        public static final int icon=0x7f020006;
-        public static final int image_placeholder=0x7f020007;
-        public static final int list_item_shape=0x7f020008;
-        public static final int logo=0x7f020009;
-        public static final int menuitem_background_focus=0x7f02000a;
-        public static final int menuitem_background_pressed=0x7f02000b;
-        public static final int submit_button_shape=0x7f02000c;
-        public static final int submit_button_shape_default=0x7f02000d;
-        public static final int submit_button_shape_focused=0x7f02000e;
-        public static final int submit_button_shape_pressed=0x7f02000f;
+        public static final int emo_im_sad=0x7f020002;
+        public static final int failed_to_download=0x7f020003;
+        public static final int ic_menu_camera=0x7f020004;
+        public static final int ic_menu_refresh=0x7f020005;
+        public static final int ic_menu_upload=0x7f020006;
+        public static final int icon=0x7f020007;
+        public static final int image_placeholder=0x7f020008;
+        public static final int list_item_shape=0x7f020009;
+        public static final int logo=0x7f02000a;
+        public static final int menuitem_background_focus=0x7f02000b;
+        public static final int menuitem_background_pressed=0x7f02000c;
+        public static final int submit_button_shape=0x7f02000d;
+        public static final int submit_button_shape_default=0x7f02000e;
+        public static final int submit_button_shape_focused=0x7f02000f;
+        public static final int submit_button_shape_pressed=0x7f020010;
     }
     public static final class id {
         public static final int avatar=0x7f080004;
@@ -62,6 +63,7 @@ public final class R {
         public static final int login_inputbox_username=0x7f080020;
         public static final int login_view=0x7f080019;
         public static final int logo=0x7f080013;
+        public static final int menu_logout=0x7f080035;
         public static final int menu_refresh=0x7f080034;
         public static final int num_of_comments=0x7f08000f;
         public static final int refresh_button=0x7f080014;
