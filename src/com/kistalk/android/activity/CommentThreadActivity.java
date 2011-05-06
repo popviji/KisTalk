@@ -8,7 +8,6 @@ import com.kistalk.android.util.Constant;
 import com.kistalk.android.util.DbAdapter;
 import com.kistalk.android.util.UploadTask;
 
-
 import android.app.ListActivity;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -17,6 +16,7 @@ import android.view.View.OnClickListener;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class CommentThreadActivity extends ListActivity implements Constant {
 
@@ -61,7 +61,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 	@Override
 	public Object onRetainNonConfigurationInstance() {
-		//return super.onRetainNonConfigurationInstance();
+		// return super.onRetainNonConfigurationInstance();
 		return ((EditText) findViewById(R.id.inputbox)).getText().toString();
 	}
 
@@ -78,7 +78,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		// query database
 		dbAdapter.open();
 		Cursor cur = dbAdapter.fetchPostFromId(itemId);
-		
+
 		// Extract fields from cursor
 		String imageUrl = cur.getString(cur.getColumnIndex(KEY_ITEM_URL_BIG));
 		String userName = cur.getString(cur.getColumnIndex(KEY_ITEM_USER_NAME));
@@ -87,7 +87,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		String description = cur.getString(cur
 				.getColumnIndex(KEY_ITEM_DESCRIPTION));
 		String date = cur.getString(cur.getColumnIndex(KEY_ITEM_DATE));
-		
+
 		dbAdapter.close();
 
 		// Set views
@@ -117,9 +117,9 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 		KT_SimpleCursorAdapter adapter = new KT_SimpleCursorAdapter(this,
 				R.layout.comment_item_layout, cur, displayFields, displayViews);
-		
+
 		setListAdapter(adapter);
-		
+
 		dbAdapter.close();
 	}
 
@@ -134,10 +134,24 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 					@Override
 					public void onClick(View v) {
-						KT_UploadMessage message = new KT_UploadMessage(null, ((EditText) findViewById(R.id.inputbox))
-										.getText().toString(), itemId, UPLOAD_COMMENT_MESSAGE_TAG);
-						new UploadTask(CommentThreadActivity.this)
-								.execute(message);
+
+						String comment = ((EditText) findViewById(R.id.inputbox))
+								.getText().toString().trim();
+						if (comment.length() < 3)
+							Toast.makeText(CommentThreadActivity.this,
+									"Comment too short", Toast.LENGTH_LONG)
+									.show();
+						else if (comment.length() > 500)
+							Toast.makeText(CommentThreadActivity.this,
+									"Comment too long", Toast.LENGTH_LONG)
+									.show();
+						else {
+							KT_UploadMessage message = new KT_UploadMessage(
+									null, comment, itemId,
+									UPLOAD_COMMENT_MESSAGE_TAG);
+							new UploadTask(CommentThreadActivity.this)
+									.execute(message);
+						}
 
 					}
 				});
