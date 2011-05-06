@@ -12,17 +12,14 @@ import org.xmlpull.v1.XmlPullParserException;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.MediaStore.MediaColumns;
 import android.util.Log;
@@ -99,6 +96,7 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	private void restoreImageCache(Bundle savedInstanceState) {
 		if (savedInstanceState != null) {
 			HashMap<String, String> imageCacheHashMap = (HashMap<String, String>) savedInstanceState
@@ -337,7 +335,7 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	private void showComments(int itemId) {
 		Intent commentIntent = new Intent(FeedActivity.this,
-				ThreadActivity.class);
+				CommentThreadActivity.class);
 		commentIntent.setAction(Intent.ACTION_VIEW);
 		// intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		commentIntent.putExtra(KEY_ITEM_ID, itemId);
@@ -361,59 +359,41 @@ public class FeedActivity extends ListActivity implements Constant {
 	}
 
 	private void refreshPosts() {
+		new AsyncTask<Void, Void, Void>() {
 
-		// dbLoader.start(dbAdapter);
+			@Override
+			protected Void doInBackground(Void... params) {
+				try {
+					LinkedList<FeedItem> feedItems = KT_XMLParser
+							.fetchAndParse();
 
-		try {
-			LinkedList<FeedItem> feedItems = KT_XMLParser.fetchAndParse();
-			if (feedItems == null) {
-				Log.e(LOG_TAG, "Problem when downloading XML file");
+					if (feedItems == null) {
+						Log.e(LOG_TAG, "Problem when downloading XML file");
+						return null;
+					}
+
+					dbAdapter.deleteAll();
+
+					for (FeedItem feedItem : feedItems) {
+						dbAdapter.insertPost(feedItem.post);
+						dbAdapter.insertComments(feedItem.comments);
+					}
+				} catch (XmlPullParserException e) {
+					Log.e(LOG_TAG, "" + e, e);
+				} catch (IOException e) {
+					Log.e(LOG_TAG, "" + e, e);
+				} catch (URISyntaxException e) {
+					Log.e(LOG_TAG, "" + e, e);
+				}
+
+				return null;
 			}
 
-			dbAdapter.deleteAll();
-
-			for (FeedItem feedItem : feedItems) {
-				dbAdapter.insertPost(feedItem.post);
-				dbAdapter.insertComments(feedItem.comments);
+			@Override
+			protected void onPostExecute(Void result) {
+				populateList();
 			}
-		} catch (XmlPullParserException e) {
-			Log.e(LOG_TAG, "" + e, e);
-		} catch (IOException e) {
-			Log.e(LOG_TAG, "" + e, e);
-		} catch (URISyntaxException e) {
-			Log.e(LOG_TAG, "" + e, e);
-		}
-
-		populateList();
-
-		// DBLoader.start(this, this.dbAdapter);
-		/*
-		 * dbSerialExecutor = new DBSerialExecutor(this); Thread dbThread = new
-		 * Thread(new DBThread(dbAdapter, dbSerialExecutor));
-		 * dbSerialExecutor.addTask(dbThread); dbSerialExecutor.start();
-		 */
-		/*
-		 * new AsyncTask<Void, Void, Void>() {
-		 * 
-		 * @Override protected Void doInBackground(Void... params) { try {
-		 * LinkedList<FeedItem> feedItems = KT_XMLParser .fetchAndParse(); if
-		 * (feedItems == null) { Log.e(LOG_TAG,
-		 * "Problem when downloading XML file"); return null; }
-		 * 
-		 * dbAdapter.deleteAll();
-		 * 
-		 * for (FeedItem feedItem : feedItems) {
-		 * dbAdapter.insertPost(feedItem.post);
-		 * dbAdapter.insertComments(feedItem.comments); } } catch
-		 * (XmlPullParserException e) { Log.e(LOG_TAG, "" + e, e); } catch
-		 * (IOException e) { Log.e(LOG_TAG, "" + e, e); } catch
-		 * (URISyntaxException e) { Log.e(LOG_TAG, "" + e, e); }
-		 * 
-		 * return null; }
-		 * 
-		 * @Override protected void onPostExecute(Void result) { populateList();
-		 * } }.execute((Void[]) null);
-		 */
+		}.execute((Void[]) null);
 	}
 
 	@Override
@@ -439,7 +419,7 @@ public class FeedActivity extends ListActivity implements Constant {
 
 		case REQUEST_GET_CAMERA_PIC:
 			if (resultCode == RESULT_OK) {
-				//String realPath = getRealPathFromUri(tempFile);
+				// String realPath = getRealPathFromUri(tempFile);
 				String uriString = tempFile.toString();
 				URI uRI = null;
 				try {
@@ -450,7 +430,7 @@ public class FeedActivity extends ListActivity implements Constant {
 				}
 				File f = new File(uRI);
 				String fileString = f.toString();
-				
+
 				showUploadView(fileString);
 			}
 			break;

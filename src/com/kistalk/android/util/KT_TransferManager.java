@@ -28,9 +28,6 @@ import org.apache.http.protocol.HTTP;
 import com.kistalk.android.activity.FeedActivity;
 import com.kistalk.android.base.KT_UploadMessage;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-
 import android.net.Uri;
 import android.util.Log;
 
@@ -138,7 +135,8 @@ public class KT_TransferManager implements Constant {
 	 * 
 	 * @param message
 	 */
-	public void uploadPhotoMessage(KT_UploadMessage message) {
+	public boolean uploadPhotoMessage(KT_UploadMessage message) {
+		boolean complete = false;
 
 		/* Error check */
 		if (message == null) {
@@ -208,10 +206,13 @@ public class KT_TransferManager implements Constant {
 
 			httpPost.setEntity(multipartEntity);
 
-			// TODO: Add HttpResponse response for response handling
 			try {
-				client.execute(httpPost);
-
+				HttpResponse responseAction = client.execute(httpPost);
+				int respSend = responseAction.getStatusLine().getStatusCode();
+				Log.i(LOG_TAG, "Response code after upload photo send: "
+						+ Integer.toString(respSend));
+				if (respSend == HttpURLConnection.HTTP_OK)
+					complete = true;
 			} catch (ClientProtocolException e) {
 				Log.e(LOG_TAG, e.toString());
 				e.printStackTrace();
@@ -222,36 +223,12 @@ public class KT_TransferManager implements Constant {
 		}
 		/* Clean up */
 		httpConnection.disconnect();
+		return complete;
 	}
 
-	public Bitmap readImageFromLocation(String path) {
-		return BitmapFactory.decodeFile(path);
-	}
+	public boolean uploadComment(KT_UploadMessage message) {
+		boolean complete = false;
 
-	/*
-	 * Returns an inputstream from a specified URL link
-	 * 
-	 * @param url
-	 * 
-	 * @return Url data in a InputStream
-	 */
-	public static InputStream getXMLFile() throws URISyntaxException,
-			ClientProtocolException, IOException {
-		DefaultHttpClient client = new DefaultHttpClient();
-
-		Uri uri = new Uri.Builder().scheme(SCHEME).authority(HOST)
-				.path(XML_FILE_PATH)
-				.appendQueryParameter(ARG_USERNAME, FeedActivity.getUsername())
-				.appendQueryParameter(ARG_TOKEN, FeedActivity.getToken())
-				.build();
-
-		HttpGet method = new HttpGet(new URI(uri.toString()));
-
-		HttpResponse res = client.execute(method);
-		return res.getEntity().getContent();
-	}
-
-	public void uploadComment(KT_UploadMessage message) {
 		/* Error check */
 		if (message == null) {
 			Log.e(LOG_TAG, "Bad comment message");
@@ -310,10 +287,14 @@ public class KT_TransferManager implements Constant {
 
 			httpPost.setEntity(multipartEntity);
 
-			// TODO: Add HttpResponse response for response handling
 			try {
-				client.execute(httpPost);
-
+				HttpResponse responseAction = client.execute(httpPost);
+				int respSend = responseAction.getStatusLine().getStatusCode();
+				Log.i(LOG_TAG,
+						"Response code after comment send: "
+								+ Integer.toString(respSend));
+				if (respSend == HttpURLConnection.HTTP_OK)
+					complete = true;
 			} catch (ClientProtocolException e) {
 				Log.e(LOG_TAG, e.toString());
 				e.printStackTrace();
@@ -324,7 +305,7 @@ public class KT_TransferManager implements Constant {
 		}
 		/* Clean up */
 		httpConnection.disconnect();
-
+		return complete;
 	}
 
 	public boolean validate(String username, String token) {
@@ -383,5 +364,28 @@ public class KT_TransferManager implements Constant {
 			httpConnection.disconnect();
 			return false;
 		}
+	}
+
+	/*
+	 * Returns an inputstream from a specified URL link
+	 * 
+	 * @param url
+	 * 
+	 * @return Url data in a InputStream
+	 */
+	public static InputStream getXMLFile() throws URISyntaxException,
+			ClientProtocolException, IOException {
+		DefaultHttpClient client = new DefaultHttpClient();
+
+		Uri uri = new Uri.Builder().scheme(SCHEME).authority(HOST)
+				.path(XML_FILE_PATH)
+				.appendQueryParameter(ARG_USERNAME, FeedActivity.getUsername())
+				.appendQueryParameter(ARG_TOKEN, FeedActivity.getToken())
+				.build();
+
+		HttpGet method = new HttpGet(new URI(uri.toString()));
+
+		HttpResponse res = client.execute(method);
+		return res.getEntity().getContent();
 	}
 }
