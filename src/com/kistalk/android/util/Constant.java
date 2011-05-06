@@ -79,4 +79,5 @@ public interface Constant {
 	public static final CharSequence[] OPTIONS = {
 			"Choose existing photo", "Capture a photo" };
 	public static final int DIALOG_CHOOSE_OPTION_ID = 11;
+	public static final int DIALOG_LOGOUT = 13;
 }
