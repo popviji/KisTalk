@@ -23,9 +23,14 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.provider.MediaStore.MediaColumns;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnFocusChangeListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.SimpleCursorAdapter;
@@ -53,11 +58,14 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	private Uri tempFile;
 
+	Animation rotate;
+
 	// private instances of classes
 	public static DbAdapter dbAdapter;
 	public static ImageController imageController = new ImageController();
 
 	private SharedPreferences sp;
+	private boolean refreshingPosts;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -70,6 +78,7 @@ public class FeedActivity extends ListActivity implements Constant {
 
 		setFocusListeners();
 		setOnClickListeners();
+		loadAnimations();
 
 		dbAdapter.open();
 		restoreImageCache(savedInstanceState);
@@ -80,6 +89,10 @@ public class FeedActivity extends ListActivity implements Constant {
 		token = sp.getString(ARG_TOKEN, null);
 
 		validateCredentials();
+	}
+
+	private void loadAnimations() {
+		rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_indefinately);
 	}
 
 	private void validateCredentials() {
@@ -170,6 +183,26 @@ public class FeedActivity extends ListActivity implements Constant {
 		super.onRestoreInstanceState(state);
 	}
 
+	/* Creates a user menu */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.app_option_menu, menu);
+		return true;
+	}
+
+	/* The system calls this method when a user selects a menu item */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.menu_refresh:
+			refreshPosts();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
 	private void setFocusListeners() {
 		findViewById(R.id.upload_button).setOnFocusChangeListener(
 				new OnFocusChangeListener() {
@@ -185,22 +218,6 @@ public class FeedActivity extends ListActivity implements Constant {
 
 					}
 				});
-
-		findViewById(R.id.refresh_button).setOnFocusChangeListener(
-				new OnFocusChangeListener() {
-
-					@Override
-					public void onFocusChange(View v, boolean hasFocus) {
-						if (hasFocus)
-							v.findViewById(R.id.refresh_focus_bg)
-									.setVisibility(View.VISIBLE);
-						else
-							v.findViewById(R.id.refresh_focus_bg)
-									.setVisibility(View.INVISIBLE);
-
-					}
-				});
-
 	}
 
 	/*
@@ -212,6 +229,7 @@ public class FeedActivity extends ListActivity implements Constant {
 		filesDir = getFilesDir();
 		dbAdapter = new DbAdapter(this);
 		imageController = new ImageController();
+		refreshingPosts = false;
 	}
 
 	/*
@@ -246,17 +264,6 @@ public class FeedActivity extends ListActivity implements Constant {
 		/*
 		 * Refresh button that refreshes all feed items
 		 */
-
-		findViewById(R.id.refresh_button).setOnClickListener(
-				new OnClickListener() {
-
-					@Override
-					public void onClick(View v) {
-						refreshPosts();
-
-					}
-				});
-
 		getListView().setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
@@ -360,41 +367,51 @@ public class FeedActivity extends ListActivity implements Constant {
 	}
 
 	private void refreshPosts() {
-		new AsyncTask<Void, Void, Void>() {
 
-			@Override
-			protected Void doInBackground(Void... params) {
-				try {
-					LinkedList<FeedItem> feedItems = KT_XMLParser
-							.fetchAndParse();
+		if (!refreshingPosts) {
+			refreshingPosts = true;
+			findViewById(R.id.refresh_button).setVisibility(View.VISIBLE);
+			findViewById(R.id.refresh_button).startAnimation(rotate);
 
-					if (feedItems == null) {
-						Log.e(LOG_TAG, "Problem when downloading XML file");
-						return null;
+			new AsyncTask<Void, Void, Void>() {
+
+				@Override
+				protected Void doInBackground(Void... params) {
+					try {
+						LinkedList<FeedItem> feedItems = KT_XMLParser
+								.fetchAndParse();
+
+						if (feedItems == null) {
+							Log.e(LOG_TAG, "Problem when downloading XML file");
+							return null;
+						}
+
+						dbAdapter.deleteAll();
+
+						for (FeedItem feedItem : feedItems) {
+							dbAdapter.insertPost(feedItem.post);
+							dbAdapter.insertComments(feedItem.comments);
+						}
+					} catch (XmlPullParserException e) {
+						Log.e(LOG_TAG, "" + e, e);
+					} catch (IOException e) {
+						Log.e(LOG_TAG, "" + e, e);
+					} catch (URISyntaxException e) {
+						Log.e(LOG_TAG, "" + e, e);
 					}
 
-					dbAdapter.deleteAll();
-
-					for (FeedItem feedItem : feedItems) {
-						dbAdapter.insertPost(feedItem.post);
-						dbAdapter.insertComments(feedItem.comments);
-					}
-				} catch (XmlPullParserException e) {
-					Log.e(LOG_TAG, "" + e, e);
-				} catch (IOException e) {
-					Log.e(LOG_TAG, "" + e, e);
-				} catch (URISyntaxException e) {
-					Log.e(LOG_TAG, "" + e, e);
+					return null;
 				}
 
-				return null;
-			}
-
-			@Override
-			protected void onPostExecute(Void result) {
-				populateList();
-			}
-		}.execute((Void[]) null);
+				@Override
+				protected void onPostExecute(Void result) {
+					populateList();
+					refreshingPosts = false;
+					findViewById(R.id.refresh_button).clearAnimation();
+					findViewById(R.id.refresh_button).setVisibility(View.INVISIBLE);
+				}
+			}.execute((Void[]) null);
+		}
 	}
 
 	@Override
