@@ -27,7 +27,7 @@
 
 	<style name="ListViewSyle">
 		<item name="android:divider">@android:color/transparent</item>
-		<item name="android:dividerHeight">10dip</item>
+		<item name="android:dividerHeight">0dip</item>
 	</style>
 
 	<style name="SubmitButtonStyle">

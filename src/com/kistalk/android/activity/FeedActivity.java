@@ -149,7 +149,7 @@ public class FeedActivity extends ListActivity implements Constant {
 		imageController.killExecutor();
 		if (isFinishing()) {
 			imageController.clearCache();
-			if (tempFile.exists())
+			if (tempFile != null && tempFile.exists())
 				tempFile.delete();
 		}
 	}
@@ -219,6 +219,10 @@ public class FeedActivity extends ListActivity implements Constant {
 	private void logout() {
 		Toast.makeText(this, "Your are now logged out", Toast.LENGTH_LONG)
 				.show();
+		sp.edit().remove(ARG_USERNAME).remove(ARG_TOKEN).commit();
+		imageController.clearCache();
+		startLoginActivityForResult();
+
 	}
 
 	/*

@@ -1,12 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent" android:background="#FFFF0080"
-	android:id="@+id/header" android:layout_height="wrap_content">
-    <LinearLayout android:layout_height="fill_parent" android:layout_width="wrap_content" android:id="@+id/linearLayout2" android:gravity="center">
-        <ImageView android:layout_height="wrap_content" android:layout_width="wrap_content" android:src="@drawable/logo" android:id="@+id/logo" android:paddingLeft="5dip" android:paddingRight="5dip"></ImageView>
-    </LinearLayout>
-	<LinearLayout android:id="@+id/linearLayout1" android:layout_width="fill_parent" android:gravity="right" android:layout_height="fill_parent">
-		<ImageView android:layout_height="wrap_content" android:layout_width="wrap_content" android:visibility="invisible" android:src="@drawable/ic_menu_refresh" android:id="@+id/refresh_button" android:padding="5dip"></ImageView>
-		<ImageView android:layout_height="wrap_content" android:focusable="true" android:layout_width="wrap_content" android:src="@drawable/ic_menu_camera" android:id="@+id/upload_button" android:padding="5dip"></ImageView>
+	<LinearLayout android:layout_width="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android"
+		android:background="@drawable/header_bg" android:id="@+id/header" android:layout_height="wrap_content">
+		<LinearLayout android:layout_height="fill_parent"
+			android:layout_width="wrap_content" android:id="@+id/linearLayout2"
+			android:gravity="center">
+			<ImageView android:layout_height="wrap_content"
+				android:layout_width="wrap_content" android:src="@drawable/logo"
+				android:id="@+id/logo" android:paddingLeft="5dip"
+				android:paddingRight="5dip"></ImageView>
+		</LinearLayout>
+		<LinearLayout android:id="@+id/linearLayout1"
+			android:layout_width="fill_parent" android:gravity="right"
+			android:layout_height="fill_parent">
+			<ImageView android:layout_height="wrap_content"
+				android:layout_width="wrap_content" android:visibility="invisible"
+				android:src="@drawable/ic_menu_refresh" android:id="@+id/refresh_button"
+				android:padding="5dip"></ImageView>
+			<ImageView android:layout_height="wrap_content"
+				android:focusable="true" android:layout_width="wrap_content"
+				android:src="@drawable/ic_menu_camera" android:id="@+id/upload_button"
+				android:padding="5dip"></ImageView>
+		</LinearLayout>
 	</LinearLayout>
-</LinearLayout>
