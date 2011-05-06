@@ -28,6 +28,7 @@ import org.apache.http.protocol.HTTP;
 import com.kistalk.android.activity.FeedActivity;
 import com.kistalk.android.base.KT_UploadMessage;
 
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.Log;
 
@@ -35,6 +36,7 @@ public class KT_TransferManager implements Constant {
 
 	private DefaultHttpClient client;
 	private URL urlObject; // Creates a URL instance
+	private SharedPreferences sp;
 
 	/* Default constructor */
 	public KT_TransferManager() {
@@ -44,6 +46,7 @@ public class KT_TransferManager implements Constant {
 		} catch (MalformedURLException e) {
 			Log.e("Bad URL", e.toString());
 		}
+		
 	}
 
 	/**

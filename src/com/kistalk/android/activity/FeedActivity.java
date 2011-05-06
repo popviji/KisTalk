@@ -65,6 +65,8 @@ public class FeedActivity extends ListActivity implements Constant {
 	public static DbAdapter dbAdapter;
 	public static ImageController imageController;
 
+	private KT_SimpleCursorAdapter cursorAdapter;
+
 	private SharedPreferences sp;
 
 	@Override
@@ -86,10 +88,11 @@ public class FeedActivity extends ListActivity implements Constant {
 		username = sp.getString(ARG_USERNAME, null);
 		token = sp.getString(ARG_TOKEN, null);
 
-		if (savedInstanceState == null)
+		// If program starts (and not restarts due to orientation changes)
+		if (savedInstanceState == null) {
+			validateCredentials();
 			sp.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
-
-		validateCredentials();
+		}
 	}
 
 	private void loadAnimations() {
@@ -103,10 +106,6 @@ public class FeedActivity extends ListActivity implements Constant {
 			KT_TransferManager transferManager = new KT_TransferManager();
 			if (!transferManager.validate(username, token))
 				startLoginActivityForResult();
-			else {
-				populateList();
-				refreshPosts();
-			}
 		}
 
 	}
@@ -125,6 +124,8 @@ public class FeedActivity extends ListActivity implements Constant {
 	@Override
 	protected void onStart() {
 		super.onStart();
+		cursorAdapter = initializeListAdapter();
+		refreshPosts();
 	}
 
 	@Override
@@ -154,7 +155,7 @@ public class FeedActivity extends ListActivity implements Constant {
 		}
 	}
 
-	public synchronized void populateList() {
+	public KT_SimpleCursorAdapter initializeListAdapter() {
 		dbAdapter.open();
 		Cursor cur = dbAdapter.fetchAllPosts();
 
@@ -171,6 +172,8 @@ public class FeedActivity extends ListActivity implements Constant {
 		setListAdapter(adapter);
 
 		dbAdapter.close();
+
+		return adapter;
 
 	}
 
@@ -341,6 +344,13 @@ public class FeedActivity extends ListActivity implements Constant {
 		return dialog;
 	}
 
+	private void updateAdapter() {
+		dbAdapter.open();
+		Cursor cur = dbAdapter.fetchAllPosts();
+		cursorAdapter.changeCursor(cur);
+		dbAdapter.close();
+	}
+
 	private void showFileChooser() {
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 		intent.setType("image/*");
@@ -433,7 +443,7 @@ public class FeedActivity extends ListActivity implements Constant {
 					findViewById(R.id.refresh_button).setVisibility(
 							View.INVISIBLE);
 					if (successful) {
-						populateList();
+						updateAdapter();
 					} else
 						Toast.makeText(FeedActivity.this, "Refresh failed",
 								Toast.LENGTH_SHORT).show();
@@ -500,11 +510,16 @@ public class FeedActivity extends ListActivity implements Constant {
 		return cursor.getString(column_index);
 	}
 
+	private void startLoginActivityForResult() {
+		Intent loginIntent = new Intent(this, LoginActivity.class);
+		startActivityForResult(loginIntent, LOGIN_REQUEST);
+	}
+
 	public static String getUsername() {
 		return username;
 	}
 
-	private static void setUsername(String username) {
+	public static void setUsername(String username) {
 		FeedActivity.username = username;
 	}
 
@@ -512,13 +527,8 @@ public class FeedActivity extends ListActivity implements Constant {
 		return token;
 	}
 
-	private static void setToken(String token) {
+	public static void setToken(String token) {
 		FeedActivity.token = token;
-	}
-
-	private void startLoginActivityForResult() {
-		Intent loginIntent = new Intent(this, LoginActivity.class);
-		startActivityForResult(loginIntent, LOGIN_REQUEST);
 	}
 
 }

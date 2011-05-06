@@ -1,4 +1,3 @@
-
 package com.kistalk.android.activity.kt_extensions;
 
 import com.kistalk.android.R;
@@ -20,8 +19,10 @@ public class KT_SimpleCursorAdapter extends SimpleCursorAdapter implements
 
 	@Override
 	public void setViewImage(ImageView v, String value) {
-		v.setImageResource(R.drawable.image_placeholder);
+		if (v.getId() == R.id.avatar)
+			v.setImageResource(R.drawable.placeholder_avatar);
+		else if (v.getId() == R.id.image)
+			v.setImageResource(R.drawable.placeholder_image);
 		FeedActivity.imageController.start(value, v);
 	}
 }
-

@@ -24,7 +24,7 @@ public class DBLoader implements Constant {
 	}
 	
 	public synchronized void callBackUIThread() {
-		feedActivity.populateList();
+		feedActivity.initializeListAdapter();
 	}
 
 }

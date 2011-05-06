@@ -1,7 +1,9 @@
 package com.kistalk.android.util;
 
+import com.kistalk.android.activity.CommentThreadActivity;
 import com.kistalk.android.base.KT_UploadMessage;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -35,17 +37,18 @@ public class UploadTask extends AsyncTask<KT_UploadMessage, Void, String>
 
 	private Context context;
 	private ProgressDialog progDialog;
-
-	/*
-	 * Default constructor. Calls the super class constructor and then takes an
-	 * user specified context argument
-	 * 
-	 * @param context
-	 */
-	public UploadTask(Context context) {
+	private CommentThreadActivity cThreadActivity;
+	private short messageTag ;
+	
+	public UploadTask(Context context, CommentThreadActivity cThreadActivity) {
 		super();
 		this.context = context;
 		this.progDialog = new ProgressDialog(context);
+		this.cThreadActivity = cThreadActivity;
+	}
+	
+	public UploadTask(Context context) {
+		this(context, null);
 	}
 
 	@Override
@@ -85,24 +88,22 @@ public class UploadTask extends AsyncTask<KT_UploadMessage, Void, String>
 	@Override
 	protected String doInBackground(KT_UploadMessage... messages) {
 		KT_TransferManager transferManager = new KT_TransferManager();
-		int count = messages.length;
-		int index = 0;
+
+		messageTag = messages[0].getMessageTag();
 		
 		String status = "Upload failed";
 
 		/* If not cancelled or not gone through all items - do work */
-		while (!isCancelled() && index < count) {
 			Log.i(LOG_TAG, "Uploading message");
-			if (messages[index].getMessageTag() == UPLOAD_PHOTO_MESSAGE_TAG) {
-				if (transferManager.uploadPhotoMessage(messages[index]))
+			if (messages[0].getMessageTag() == UPLOAD_PHOTO_MESSAGE_TAG) {
+				if (transferManager.uploadPhotoMessage(messages[0]))
 					status = "Upload complete!";
 			}
-			else if (messages[index].getMessageTag() == UPLOAD_COMMENT_MESSAGE_TAG) {
-				if (transferManager.uploadComment(messages[index]))
+			else if (messages[0].getMessageTag() == UPLOAD_COMMENT_MESSAGE_TAG) {
+				if (transferManager.uploadComment(messages[0]))
 					status = "Upload complete!";
 			}
-			index++;
-		}
+
 		return status;
 	}
 
@@ -119,5 +120,9 @@ public class UploadTask extends AsyncTask<KT_UploadMessage, Void, String>
 					}
 				});
 		(builder.create()).show();
+		
+		if (messageTag == UPLOAD_COMMENT_MESSAGE_TAG) {
+			cThreadActivity.commentPosted();
+		}
 	}
 }

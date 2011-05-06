@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout android:layout_width="wrap_content"
-	android:layout_height="wrap_content" xmlns:android="http://schemas.android.com/apk/res/android"
-	android:id="@+id/thread_comment_form">
-	<TextView android:id="@+id/label" android:layout_width="wrap_content"
-		android:layout_height="wrap_content" android:text="@string/upload_type_comment"
-		android:paddingBottom="10dip" />
-	<EditText android:id="@+id/inputbox" android:layout_width="fill_parent"
-		android:layout_height="wrap_content" android:background="@android:drawable/editbox_background"
-		android:layout_below="@id/label" />
-	<Button android:layout_below="@id/inputbox"
-		android:layout_alignRight="@id/inputbox" android:layout_height="wrap_content"
-		android:text="@string/comment" android:id="@+id/comment_button"
-		android:layout_width="wrap_content" android:paddingTop="10dip"
-		android:capitalize="sentences" android:background="@drawable/submit_button_shape"
-		style="@style/SubmitButtonStyle" />
-</RelativeLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_height="wrap_content" android:layout_width="wrap_content"
+	android:id="@+id/wrapper" android:paddingRight="5dip"
+	android:paddingLeft="20dip" android:paddingTop="5dip"
+	android:paddingBottom="5dip">
 
+	<RelativeLayout android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:id="@+id/thread_comment_form"
+		android:background="@drawable/list_item_shape">
+		<TextView android:id="@+id/label" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="@string/upload_type_comment"
+			android:paddingBottom="10dip" />
+		<EditText android:id="@+id/inputbox" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:background="@android:drawable/editbox_background"
+			android:layout_below="@id/label" />
+		<Button android:layout_below="@id/inputbox"
+			android:layout_alignRight="@id/inputbox" android:layout_height="wrap_content"
+			android:text="@string/comment" android:id="@+id/comment_button"
+			android:layout_width="wrap_content" android:paddingTop="10dip"
+			android:capitalize="sentences" android:background="@drawable/submit_button_shape"
+			style="@style/SubmitButtonStyle" />
+	</RelativeLayout>
+</LinearLayout>
