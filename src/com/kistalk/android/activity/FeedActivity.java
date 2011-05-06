@@ -198,9 +198,16 @@ public class FeedActivity extends ListActivity implements Constant {
 		case R.id.menu_refresh:
 			refreshPosts();
 			return true;
+		case R.id.menu_logout:
+			showDialog(DIALOG_LOGOUT);
+			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+
+	private void logout() {
+		Toast.makeText(this, "Your are now logged out", Toast.LENGTH_LONG).show();
 	}
 
 	private void setFocusListeners() {
@@ -309,6 +316,26 @@ public class FeedActivity extends ListActivity implements Constant {
 					});
 			return builder.create();
 
+		case DIALOG_LOGOUT:
+			AlertDialog.Builder secondBuilder = new AlertDialog.Builder(this);
+			secondBuilder.setMessage("Are you sure you want to logout?")
+					.setCancelable(false)
+					.setPositiveButton("Yes",
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									logout();
+								}
+							})
+					.setNegativeButton("No",
+							new DialogInterface.OnClickListener() {
+								public void onClick(DialogInterface dialog,
+										int id) {
+									dialog.cancel();
+								}
+							});
+			return secondBuilder.create();
+
 		default:
 			dialog = null;
 		}
@@ -408,7 +435,8 @@ public class FeedActivity extends ListActivity implements Constant {
 					populateList();
 					refreshingPosts = false;
 					findViewById(R.id.refresh_button).clearAnimation();
-					findViewById(R.id.refresh_button).setVisibility(View.INVISIBLE);
+					findViewById(R.id.refresh_button).setVisibility(
+							View.INVISIBLE);
 				}
 			}.execute((Void[]) null);
 		}
