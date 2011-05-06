@@ -21,11 +21,16 @@
 
 	<style name="Header_Medium" parent="@android:style/TextAppearance.Medium">
 	</style>
-	
+
 	<style name="Header_Medium" parent="@android:style/TextAppearance.Medium">
 	</style>
-	
+
 	<style name="Text_Plain" parent="@android:style/TextAppearance.Small">
+	</style>
+
+	<style name="ListViewSyle">
+		<item name="android:divider">@android:color/transparent</item>
+		<item name="android:dividerHeight">10dip</item>
 	</style>
 
 </resources>

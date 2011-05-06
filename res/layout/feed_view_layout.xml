@@ -7,5 +7,5 @@
 	
 	<ListView android:layout_width="fill_parent" android:id="@+android:id/list"
 		android:layout_height="fill_parent"
-		></ListView>
+		style="@style/ListViewSyle"></ListView>
 </LinearLayout>
