@@ -4,20 +4,15 @@
 	android:id="@+id/header" android:layout_height="wrap_content">
 	<ImageView android:layout_width="wrap_content" android:src="@drawable/logo"
 		android:id="@+id/logo" android:layout_height="wrap_content"></ImageView>
+	<FrameLayout android:layout_width="wrap_content" android:focusable="true" android:foreground="@drawable/ic_menu_refresh" android:visibility="invisible" android:layout_height="fill_parent" android:foregroundGravity="center" android:id="@+id/refresh_button">
+		<ImageView android:src="@drawable/menuitem_background_focus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/refresh_focus_bg" android:visibility="invisible"></ImageView>
+	</FrameLayout>
 	<FrameLayout android:layout_width="wrap_content"
 		android:id="@+id/upload_button" android:foreground="@drawable/ic_menu_camera"
 		android:layout_height="fill_parent" android:foregroundGravity="center"
-		android:focusableInTouchMode="true">
+		android:focusable="true">
 		<ImageView android:layout_height="wrap_content"
 			android:visibility="invisible" android:src="@drawable/menuitem_background_focus"
 			android:id="@+id/upload_focus_bg" android:layout_width="wrap_content"></ImageView>
-	</FrameLayout>
-	<FrameLayout android:layout_width="wrap_content"
-		android:id="@+id/refresh_button" android:foreground="@drawable/ic_menu_refresh"
-		android:focusable="true" android:layout_height="fill_parent"
-		android:foregroundGravity="center">
-		<ImageView android:layout_height="wrap_content"
-			android:visibility="invisible" android:src="@drawable/menuitem_background_focus"
-			android:id="@+id/refresh_focus_bg" android:layout_width="wrap_content"></ImageView>
 	</FrameLayout>
 </LinearLayout>
