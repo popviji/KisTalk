@@ -16,6 +16,7 @@ import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SyncResult;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
@@ -93,6 +94,8 @@ public class FeedActivity extends ListActivity implements Constant {
 			validateCredentials();
 			sp.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
 		}
+		cursorAdapter = initializeListAdapter();
+		refreshPosts();
 	}
 
 	private void loadAnimations() {
@@ -124,8 +127,6 @@ public class FeedActivity extends ListActivity implements Constant {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		cursorAdapter = initializeListAdapter();
-		refreshPosts();
 	}
 
 	@Override
@@ -155,7 +156,7 @@ public class FeedActivity extends ListActivity implements Constant {
 		}
 	}
 
-	public KT_SimpleCursorAdapter initializeListAdapter() {
+	private synchronized KT_SimpleCursorAdapter initializeListAdapter() {
 		dbAdapter.open();
 		Cursor cur = dbAdapter.fetchAllPosts();
 
@@ -397,7 +398,7 @@ public class FeedActivity extends ListActivity implements Constant {
 		}
 	}
 
-	private void refreshPosts() {
+	private synchronized void refreshPosts() {
 
 		if (!sp.getBoolean(KEY_REFRESHING_POSTS, false)) {
 			sp.edit().putBoolean(KEY_REFRESHING_POSTS, true).commit();

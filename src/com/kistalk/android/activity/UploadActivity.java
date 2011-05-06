@@ -37,6 +37,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 public class UploadActivity extends Activity implements Constant,
@@ -51,9 +52,9 @@ public class UploadActivity extends Activity implements Constant,
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.upload_view_layout);
-		
-        LinearLayout layMain = (LinearLayout) findViewById(R.id.upload_view);
-        layMain.setOnTouchListener((OnTouchListener) this);
+
+		LinearLayout layMain = (LinearLayout) findViewById(R.id.upload_view);
+		layMain.setOnTouchListener((OnTouchListener) this);
 
 		final String path = this.getIntent().getStringExtra(
 				KEY_UPLOAD_IMAGE_PATH);
@@ -176,10 +177,17 @@ public class UploadActivity extends Activity implements Constant,
 			@Override
 			public void onClick(View v) {
 				if (v.getId() == R.id.send_button) {
-					KT_UploadMessage message = new KT_UploadMessage(newPath,
-							((EditText) findViewById(R.id.inputbox)).getText()
-									.toString(), -1, UPLOAD_PHOTO_MESSAGE_TAG);
-					new UploadTask(UploadActivity.this).execute(message);
+					String comment = ((EditText) findViewById(R.id.inputbox))
+							.getText().toString().trim();
+
+					if (comment.length() < 3)
+						Toast.makeText(UploadActivity.this,
+								"Comment too short", Toast.LENGTH_SHORT).show();
+					else {
+						KT_UploadMessage message = new KT_UploadMessage(
+								newPath, comment, -1, UPLOAD_PHOTO_MESSAGE_TAG);
+						new UploadTask(UploadActivity.this).execute(message);
+					}
 				} else if (v.getId() == R.id.upload_image) {
 					showDialog(DIALOG_CHOOSE_OPTION_ID);
 				}

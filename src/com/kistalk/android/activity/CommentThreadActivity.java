@@ -41,9 +41,9 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	Animation rotate;
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		dbAdapter = new DbAdapter(this);
+	protected void onCreate(Bundle savedInstanceState) {		
 		super.onCreate(savedInstanceState);
+		dbAdapter = new DbAdapter(this);
 		itemId = getIntent().getIntExtra(KEY_ITEM_ID, 0);
 		setContentView(R.layout.thread_view_layout);
 		imageController = FeedActivity.imageController;
