@@ -76,7 +76,6 @@ public class FeedActivity extends ListActivity implements Constant {
 
 		setContentView(R.layout.feed_view_layout);
 
-		setFocusListeners();
 		setOnClickListeners();
 		loadAnimations();
 
@@ -209,23 +208,6 @@ public class FeedActivity extends ListActivity implements Constant {
 	private void logout() {
 		Toast.makeText(this, "Your are now logged out", Toast.LENGTH_LONG)
 				.show();
-	}
-
-	private void setFocusListeners() {
-		findViewById(R.id.upload_button).setOnFocusChangeListener(
-				new OnFocusChangeListener() {
-
-					@Override
-					public void onFocusChange(View v, boolean hasFocus) {
-						if (hasFocus)
-							v.findViewById(R.id.upload_focus_bg).setVisibility(
-									View.VISIBLE);
-						else
-							v.findViewById(R.id.upload_focus_bg).setVisibility(
-									View.INVISIBLE);
-
-					}
-				});
 	}
 
 	/*
@@ -420,8 +402,8 @@ public class FeedActivity extends ListActivity implements Constant {
 						for (FeedItem feedItem : feedItems) {
 							dbAdapter.insertPost(feedItem.post);
 							dbAdapter.insertComments(feedItem.comments);
-							return true;
 						}
+						return true;
 					} catch (XmlPullParserException e) {
 						Log.e(LOG_TAG, "" + e, e);
 					} catch (IOException e) {
@@ -429,7 +411,6 @@ public class FeedActivity extends ListActivity implements Constant {
 					} catch (URISyntaxException e) {
 						Log.e(LOG_TAG, "" + e, e);
 					}
-
 					return false;
 				}
 
