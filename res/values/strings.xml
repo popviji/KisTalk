@@ -11,12 +11,13 @@
 	<string name="comment">Comment</string>
 	<string name="KTH_ID">KTH-ID</string>
 	<string name="login_header">Login to KisTalk</string>
-	<string name="login_description">To login you\'ll need to enter your KTH account
-		username and a token which you can get after registering on
-		www.KisTalk.com. You\'ll find it under \'Profile\'. Either you write
-		the token or you scan it with your installed QR reader</string>
+	<string name="login_description">In order to use KisTalk for Android you\'ll first
+		need to sign in at the website (www.KisTalk.com) and accept our
+		license. Then you\'ll find the QR code under \'Profile\' and \'Login
+		token for Android\'</string>
 	<string name="login_label_username">Username (KTH.se account)</string>
 	<string name="login_label_token">Token</string>
-	<string name="login_button_scan_with_qr">Scan token with QR reader</string>
+	<string name="login_button_scan_with_qr">Scan QR code</string>
 	<string name="login_button_login">Login</string>
+	<string name="login_description_optional">If you don\'t have a QR reader installed you can write username and token manually</string>
 </resources>

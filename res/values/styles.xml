@@ -22,15 +22,19 @@
 	<style name="Header_Medium" parent="@android:style/TextAppearance.Medium">
 	</style>
 
-	<style name="Header_Medium" parent="@android:style/TextAppearance.Medium">
-	</style>
-
 	<style name="Text_Plain" parent="@android:style/TextAppearance.Small">
 	</style>
 
 	<style name="ListViewSyle">
 		<item name="android:divider">@android:color/transparent</item>
 		<item name="android:dividerHeight">10dip</item>
+	</style>
+
+	<style name="SubmitButtonStyle">
+		<item name="android:textStyle">bold</item>
+		<item name="android:textColor">#FFFFFFFF</item>
+		<item name="android:paddingLeft">20dip</item>
+		<item name="android:paddingRight">20dip</item>
 	</style>
 
 </resources>

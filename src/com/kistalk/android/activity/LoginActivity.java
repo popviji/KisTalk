@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -23,16 +24,11 @@ public class LoginActivity extends Activity implements Constant {
 	private Button scanQrButton;
 	private EditText usernameField;
 	private EditText tokenField;
-	
-	private SharedPreferences sp;
-	private Editor spEditor;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.login_view_layout);
-		SharedPreferences sp = getPreferences(MODE_PRIVATE);
-		spEditor = sp.edit();
 	}
 
 	@Override
@@ -47,32 +43,7 @@ public class LoginActivity extends Activity implements Constant {
 
 			@Override
 			public void onClick(View v) {
-				String username = usernameField.getText().toString().trim();
-				String token = tokenField.getText().toString().trim();
-
-				ProgressDialog pd = new ProgressDialog(LoginActivity.this);
-				pd.setMessage("Validating credentials");
-				pd.setTitle("Validating");
-				pd.show();
-
-				KT_TransferManager transferManager = new KT_TransferManager();
-				boolean credentialsOk = transferManager.validate(username,
-						token);
-
-				pd.dismiss();
-
-				if (credentialsOk) {
-					Intent result = new Intent();
-					result.putExtra(ARG_USERNAME, username);
-					result.putExtra(ARG_TOKEN, token);
-					setResult(RESULT_OK, result);
-					finish();
-				} else {
-					usernameField.clearComposingText();
-					tokenField.clearComposingText();
-					Toast.makeText(LoginActivity.this, "Bad credentials",
-							Toast.LENGTH_LONG);
-				}
+				login();
 			}
 		});
 
@@ -98,7 +69,43 @@ public class LoginActivity extends Activity implements Constant {
 	protected void onActivityResult(int requestCode, int resultCode,
 			Intent intent) {
 		if (requestCode == REQUEST_QR_READER)
-			if (resultCode == RESULT_OK)
-				tokenField.setText(intent.getStringExtra("SCAN_RESULT"));
+			if (resultCode == RESULT_OK) {
+				String result = intent.getStringExtra("SCAN_RESULT");
+				String[] credentials = result.split(":");
+				if (credentials.length == 2) {
+					usernameField.setText(credentials[0]);
+					tokenField.setText(credentials[1]);
+					login();
+				} else
+					Toast.makeText(LoginActivity.this, "Problem with QR code",
+							Toast.LENGTH_LONG).show();
+			}
+	}
+
+	private void login() {
+		String username = usernameField.getText().toString().trim();
+		String token = tokenField.getText().toString().trim();
+
+		ProgressDialog pd = new ProgressDialog(LoginActivity.this);
+		pd.setMessage("Validating credentials");
+		pd.setTitle("Validating");
+		pd.show();
+
+		KT_TransferManager transferManager = new KT_TransferManager();
+		boolean credentialsOk = transferManager.validate(username, token);
+
+		pd.dismiss();
+
+		if (credentialsOk) {
+			Intent result = new Intent();
+			result.putExtra(ARG_USERNAME, username);
+			result.putExtra(ARG_TOKEN, token);
+			setResult(RESULT_OK, result);
+			finish();
+		} else {
+			Toast.makeText(LoginActivity.this, "Bad credentials",
+					Toast.LENGTH_LONG).show();
+		}
+
 	}
 }

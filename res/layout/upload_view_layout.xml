@@ -13,16 +13,18 @@
 				<ImageView android:id="@+id/upload_image"
 					android:scaleType="centerInside" android:layout_width="fill_parent"
 					android:layout_height="wrap_content" android:adjustViewBounds="true"
-					android:src="@drawable/image_placeholder" />
+					android:src="@drawable/image_placeholder" android:paddingBottom="20dip" />
 				<TextView android:id="@+id/label" android:layout_width="wrap_content"
 					android:layout_height="wrap_content" android:layout_below="@id/upload_image"
-					android:paddingTop="25px" android:text="@string/upload_type_comment" />
+					android:text="@string/upload_type_comment" android:paddingBottom="10dip" />
 				<EditText android:id="@+id/inputbox" android:layout_width="fill_parent"
 					android:layout_height="wrap_content" android:background="@android:drawable/editbox_background"
-					android:layout_below="@id/label" />
+					android:layout_below="@id/label" android:paddingBottom="10dip" />
 				<Button android:id="@+id/send_button" android:layout_below="@id/inputbox"
-					android:layout_alignRight="@id/inputbox" android:layout_width="100px"
-					android:layout_height="wrap_content" android:text="@string/upload_send_button" />
+					android:layout_alignRight="@id/inputbox" android:layout_height="wrap_content"
+					android:text="@string/upload_send_button" style="@style/SubmitButtonStyle"
+					android:background="@drawable/submit_button_shape"
+					android:layout_width="wrap_content" />
 			</RelativeLayout>
 		</ScrollView>
 	</ViewFlipper>
