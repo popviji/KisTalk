@@ -1,28 +1,45 @@
 package com.kistalk.android.activity;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.LinkedList;
+
+import org.xmlpull.v1.XmlPullParserException;
+
 import com.kistalk.android.R;
 import com.kistalk.android.activity.kt_extensions.KT_SimpleCursorAdapter;
+import com.kistalk.android.base.FeedItem;
 import com.kistalk.android.base.KT_UploadMessage;
 import com.kistalk.android.image_management.ImageController;
 import com.kistalk.android.util.Constant;
 import com.kistalk.android.util.DbAdapter;
+import com.kistalk.android.util.KT_XMLParser;
 import com.kistalk.android.util.UploadTask;
 
 
 import android.app.ListActivity;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class CommentThreadActivity extends ListActivity implements Constant {
 
 	private int itemId;
 	private ImageController imageController;
 	private DbAdapter dbAdapter;
+	
+	private boolean refreshingPosts;
+	
+	Animation rotate;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -32,7 +49,14 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		setContentView(R.layout.thread_view_layout);
 		imageController = FeedActivity.imageController;
 		addImageAsHeader();
+		refreshingPosts = false;
+		loadAnimations();
 	}
+
+	private void loadAnimations() {
+		rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_indefinately);
+	}
+
 
 	@Override
 	protected void onStart() {
@@ -136,10 +160,66 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 					public void onClick(View v) {
 						KT_UploadMessage message = new KT_UploadMessage(null, ((EditText) findViewById(R.id.inputbox))
 										.getText().toString(), itemId, UPLOAD_COMMENT_MESSAGE_TAG);
-						new UploadTask(CommentThreadActivity.this)
+						new UploadTask(CommentThreadActivity.this, CommentThreadActivity.this)
 								.execute(message);
 
 					}
 				});
+	}
+	
+	public void commentsRefreshPosts() {
+
+		if (!refreshingPosts) {
+			refreshingPosts = true;
+			findViewById(R.id.refresh_button).setVisibility(View.VISIBLE);
+			findViewById(R.id.refresh_button).startAnimation(rotate);
+
+			new AsyncTask<DbAdapter, Void, Boolean>() {
+
+				@Override
+				protected Boolean doInBackground(DbAdapter... dbAdapters) {
+					try {
+						LinkedList<FeedItem> feedItems = KT_XMLParser
+								.fetchAndParse();
+
+						if (feedItems == null) {
+							Log.e(LOG_TAG, "Problem when downloading XML file");
+							return false;
+						}
+
+						dbAdapters[0].open();
+						dbAdapters[0].deleteAll();
+
+						for (FeedItem feedItem : feedItems) {
+							dbAdapters[0].insertPost(feedItem.post);
+							dbAdapters[0].insertComments(feedItem.comments);
+						}
+						dbAdapters[0].close();
+						return true;
+					} catch (XmlPullParserException e) {
+						Log.e(LOG_TAG, "" + e, e);
+					} catch (IOException e) {
+						Log.e(LOG_TAG, "" + e, e);
+					} catch (URISyntaxException e) {
+						Log.e(LOG_TAG, "" + e, e);
+					}
+					return false;
+				}
+
+				@Override
+				protected void onPostExecute(Boolean successful) {
+					findViewById(R.id.refresh_button).clearAnimation();
+					findViewById(R.id.refresh_button).setVisibility(
+							View.INVISIBLE);
+					if (successful) {
+						populateList();
+					} else
+						Toast.makeText(CommentThreadActivity.this, "Refresh failed",
+								Toast.LENGTH_SHORT).show();
+					refreshingPosts = false;
+					cancel(true);
+				}
+			}.execute(dbAdapter);
+		}
 	}
 }
