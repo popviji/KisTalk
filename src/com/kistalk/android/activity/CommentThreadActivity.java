@@ -21,6 +21,9 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
@@ -91,6 +94,27 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	protected void onDestroy() {
 		super.onDestroy();
 	}
+	
+	/* Creates a user menu */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.comment_thread_option_menu, menu);
+		return true;
+	}
+
+	/* The system calls this method when a user selects a menu item */
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.menu_refresh:
+			commentsRefreshPosts();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
 
 	private void addImageAsHeader() {
 		// instantiate thread feed item layout
