@@ -4,12 +4,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.annotation.Target;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import com.kistalk.android.R;
 import com.kistalk.android.base.KT_UploadMessage;
 import com.kistalk.android.util.Constant;
+import com.kistalk.android.util.KT_TransferManager;
 import com.kistalk.android.util.UploadTask;
 
 import android.app.Activity;
@@ -18,6 +20,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -47,6 +50,10 @@ public class UploadActivity extends Activity implements Constant,
 	private Button sendButton;
 	private Uri tempFile;
 	private float downXValue;
+	private String username;
+	private String token;
+	private String currentImagePath;
+	private SharedPreferences sp;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -56,19 +63,52 @@ public class UploadActivity extends Activity implements Constant,
 		LinearLayout layMain = (LinearLayout) findViewById(R.id.upload_view);
 		layMain.setOnTouchListener((OnTouchListener) this);
 
-		final String path = this.getIntent().getStringExtra(
-				KEY_UPLOAD_IMAGE_PATH);
+		checkLoginState();
 
+		Intent intent = getIntent();
+		if (Intent.ACTION_SEND.equals(intent.getAction())) {
+			Bundle extras = intent.getExtras();
+			if (extras.containsKey(Intent.EXTRA_STREAM)) {
+				Uri uri = (Uri) extras.getParcelable(Intent.EXTRA_STREAM);
+				currentImagePath = getPathFromContentURI(uri);
+
+				startProcedure();
+			}
+		} else if (currentImagePath == null) {
+			if (savedInstanceState == null)
+				currentImagePath = this.getIntent().getStringExtra(
+						KEY_UPLOAD_IMAGE_PATH);
+			else {
+				if (savedInstanceState.containsKey(KEY_CURRENT_IMAGE))
+					currentImagePath = savedInstanceState
+							.getString(KEY_CURRENT_IMAGE);
+			}
+
+			startProcedure();
+		}
+	}
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		outState.putString(KEY_CURRENT_IMAGE, currentImagePath);
+	}
+
+	private void startProcedure() {
+		final String pathImage = currentImagePath;
+
+		File f = new File(pathImage);
 		int smartImageSize = getSmartImageSize();
-
-		File file = new File(path);
-		Bitmap storedImage = decodeFile(file, smartImageSize);
+		Bitmap storedImage = decodeFile(f, smartImageSize);
 
 		/*
 		 * Create an OnClickListener
 		 */
-		OnClickListener onCL = createNewOnClickListener(path);
+		OnClickListener onCL = createNewOnClickListener(pathImage);
 
+		setupGUI(storedImage, onCL);
+	}
+
+	private void setupGUI(Bitmap storedImage, OnClickListener onCL) {
 		uploadImage = (ImageView) findViewById(R.id.upload_image);
 		uploadImage.setImageBitmap(storedImage);
 		uploadImage.setOnClickListener(onCL);
@@ -102,6 +142,31 @@ public class UploadActivity extends Activity implements Constant,
 		return dialog;
 	}
 
+	private void checkLoginState() {
+		
+    	sp = getSharedPreferences(LOGIN_SHARED_PREF_FILE, MODE_PRIVATE);
+		
+		username = sp.getString(ARG_USERNAME, null);
+		token = sp.getString(ARG_TOKEN, null);
+
+		validateCredentials();
+	}
+
+	private void validateCredentials() {
+		if (token == null || username == null)
+			startLoginActivityForResult();
+		else {
+			KT_TransferManager transferManager = new KT_TransferManager();
+			if (!transferManager.validate(username, token))
+				startLoginActivityForResult();
+		}
+	}
+
+	private void startLoginActivityForResult() {
+		Intent loginIntent = new Intent(this, LoginActivity.class);
+		startActivityForResult(loginIntent, LOGIN_REQUEST);
+	}
+
 	private void showFileChooser() {
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 		intent.setType("image/*");
@@ -124,8 +189,9 @@ public class UploadActivity extends Activity implements Constant,
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		super.onActivityResult(requestCode, resultCode, intent);
-		if (resultCode == RESULT_OK) {
-			if (requestCode == REQUEST_GET_CAMERA_PIC) {
+		switch (requestCode) {
+		case REQUEST_GET_CAMERA_PIC:
+			if (resultCode == RESULT_OK) {
 				String uriString = tempFile.toString();
 				URI uRI = null;
 				try {
@@ -136,38 +202,39 @@ public class UploadActivity extends Activity implements Constant,
 				}
 				File f = new File(uRI);
 
-				final String realPath = f.toString();
+				final String newImagePath = f.toString();
+				currentImagePath = newImagePath;
 
-				int smartImageSize = getSmartImageSize();
-
-				Bitmap newImage = decodeFile(f, smartImageSize);
-
-				OnClickListener newOnCL = createNewOnClickListener(realPath);
-
-				((ImageView) findViewById(R.id.upload_image))
-						.setImageBitmap(newImage);
-
-				sendButton.setOnClickListener(newOnCL);
-			}
-			if (requestCode == REQUEST_CHOOSE_IMAGE) {
+				startProcedure();
+			} else
+				Toast.makeText(this, ERROR_MSG_EXT_APPLICATION,
+						Toast.LENGTH_LONG).show();
+			break;
+		case REQUEST_CHOOSE_IMAGE:
+			if (resultCode == RESULT_OK) {
 				if (intent != null) {
 					Uri recievedUri = intent.getData();
-					final String realPath = getRealPathFromURI(recievedUri);
-
-					OnClickListener newOnCL = createNewOnClickListener(realPath);
-
-					File file = new File(realPath);
-
-					int smartImageSize = getSmartImageSize();
-
-					Bitmap newImage = decodeFile(file, smartImageSize);
-
-					((ImageView) findViewById(R.id.upload_image))
-							.setImageBitmap(newImage);
-
-					sendButton.setOnClickListener(newOnCL);
+					currentImagePath = getPathFromContentURI(recievedUri);
+					
+					startProcedure();
 				}
+			} else
+				Toast.makeText(this, ERROR_MSG_EXT_APPLICATION,
+						Toast.LENGTH_LONG).show();
+			break;
+		case LOGIN_REQUEST:
+			if (resultCode == RESULT_OK) {
+				username = intent.getStringExtra(ARG_USERNAME);
+				token = intent.getStringExtra(ARG_TOKEN);
+
+				sp.edit().putString(ARG_USERNAME, username)
+						.putString(ARG_TOKEN, token).commit();
+			} else {
+				finish();
 			}
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -176,27 +243,35 @@ public class UploadActivity extends Activity implements Constant,
 
 			@Override
 			public void onClick(View v) {
-				if (v.getId() == R.id.send_button) {
+				switch (v.getId()) {
+				case R.id.send_button:
 					String comment = ((EditText) findViewById(R.id.inputbox))
 							.getText().toString().trim();
-
 					if (comment.length() < 3)
 						Toast.makeText(UploadActivity.this,
 								"Comment too short", Toast.LENGTH_SHORT).show();
+					else if (comment.length() > 500)
+						Toast.makeText(UploadActivity.this, "Comment too long",
+								Toast.LENGTH_LONG).show();
 					else {
 						KT_UploadMessage message = new KT_UploadMessage(
 								newPath, comment, -1, UPLOAD_PHOTO_MESSAGE_TAG);
 						new UploadTask(UploadActivity.this).execute(message);
 					}
-				} else if (v.getId() == R.id.upload_image) {
+					break;
+				case R.id.upload_image:
 					showDialog(DIALOG_CHOOSE_OPTION_ID);
+					break;
+
+				default:
+					break;
 				}
 			}
 		};
 	}
 
 	// Convert the image URI to the direct file system path of the image file
-	private String getRealPathFromURI(Uri contentUri) {
+	private String getPathFromContentURI(Uri contentUri) {
 
 		String[] proj = { MediaColumns.DATA };
 		Cursor cursor = managedQuery(contentUri, proj, // Which columns to

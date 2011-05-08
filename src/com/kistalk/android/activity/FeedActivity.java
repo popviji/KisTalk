@@ -2,11 +2,9 @@ package com.kistalk.android.activity;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.concurrent.Executor;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -16,7 +14,6 @@ import android.app.ListActivity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.SyncResult;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
@@ -30,7 +27,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnFocusChangeListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
@@ -68,7 +64,7 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	private KT_SimpleCursorAdapter cursorAdapter;
 
-	private SharedPreferences sp;
+	private SharedPreferences sharedPrefs;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -84,15 +80,15 @@ public class FeedActivity extends ListActivity implements Constant {
 
 		restoreImageCache(savedInstanceState);
 
-		sp = getPreferences(MODE_PRIVATE);
+		sharedPrefs = getSharedPreferences(LOGIN_SHARED_PREF_FILE, MODE_PRIVATE);
 
-		username = sp.getString(ARG_USERNAME, null);
-		token = sp.getString(ARG_TOKEN, null);
+		username = sharedPrefs.getString(ARG_USERNAME, null);
+		token = sharedPrefs.getString(ARG_TOKEN, null);
 
 		// If program starts (and not restarts due to orientation changes)
 		if (savedInstanceState == null) {
 			validateCredentials();
-			sp.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
+			sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
 		}
 		cursorAdapter = initializeListAdapter();
 		refreshPosts();
@@ -110,7 +106,6 @@ public class FeedActivity extends ListActivity implements Constant {
 			if (!transferManager.validate(username, token))
 				startLoginActivityForResult();
 		}
-
 	}
 
 	@SuppressWarnings("unchecked")
@@ -160,15 +155,8 @@ public class FeedActivity extends ListActivity implements Constant {
 		dbAdapter.open();
 		Cursor cur = dbAdapter.fetchAllPosts();
 
-		String[] displayFields = new String[] { KEY_ITEM_USER_NAME,
-				KEY_ITEM_USER_AVATAR, KEY_ITEM_URL_SMALL, KEY_ITEM_DESCRIPTION,
-				KEY_ITEM_DATE, KEY_ITEM_NUM_OF_COMS };
-
-		int[] displayViews = new int[] { R.id.user_name, R.id.avatar,
-				R.id.image, R.id.description, R.id.date, R.id.num_of_comments };
-
 		KT_SimpleCursorAdapter adapter = new KT_SimpleCursorAdapter(this,
-				R.layout.feed_item_layout, cur, displayFields, displayViews);
+				R.layout.feed_item_layout, cur, DISPLAY_FIELDS, DISPLAY_VIEWS);
 
 		setListAdapter(adapter);
 
@@ -223,7 +211,7 @@ public class FeedActivity extends ListActivity implements Constant {
 	private void logout() {
 		Toast.makeText(this, "Your are now logged out", Toast.LENGTH_LONG)
 				.show();
-		sp.edit().remove(ARG_USERNAME).remove(ARG_TOKEN).commit();
+		sharedPrefs.edit().remove(ARG_USERNAME).remove(ARG_TOKEN).commit();
 		imageController.clearCache();
 		startLoginActivityForResult();
 
@@ -400,8 +388,8 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	private synchronized void refreshPosts() {
 
-		if (!sp.getBoolean(KEY_REFRESHING_POSTS, false)) {
-			sp.edit().putBoolean(KEY_REFRESHING_POSTS, true).commit();
+		if (!sharedPrefs.getBoolean(KEY_REFRESHING_POSTS, false)) {
+			sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, true).commit();
 			findViewById(R.id.refresh_button).setVisibility(View.VISIBLE);
 			findViewById(R.id.refresh_button).startAnimation(rotate);
 
@@ -439,7 +427,7 @@ public class FeedActivity extends ListActivity implements Constant {
 
 				@Override
 				protected void onPostExecute(Boolean successful) {
-					sp.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
+					sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
 					findViewById(R.id.refresh_button).clearAnimation();
 					findViewById(R.id.refresh_button).setVisibility(
 							View.INVISIBLE);
@@ -464,7 +452,7 @@ public class FeedActivity extends ListActivity implements Constant {
 				username = intent.getStringExtra(ARG_USERNAME);
 				token = intent.getStringExtra(ARG_TOKEN);
 
-				sp.edit().putString(ARG_USERNAME, username)
+				sharedPrefs.edit().putString(ARG_USERNAME, username)
 						.putString(ARG_TOKEN, token).commit();
 
 				imageController.clearCache();
@@ -479,25 +467,28 @@ public class FeedActivity extends ListActivity implements Constant {
 			if (resultCode == RESULT_OK) {
 				showUploadView(tempFile.toString());
 			}
+			else
+				Toast.makeText(this, ERROR_MSG_EXT_APPLICATION, Toast.LENGTH_LONG).show();
 			break;
 		case REQUEST_CHOOSE_IMAGE:
 			if (resultCode == RESULT_OK) {
 				Uri recievedUri = intent.getData();
 				if (recievedUri != null) {
-					String realPath = getRealPathFromUri(recievedUri);
+					String realPath = getPathFromContentUri(recievedUri);
 					showUploadView(realPath);
 				}
 			}
+			else
+				Toast.makeText(this, ERROR_MSG_EXT_APPLICATION, Toast.LENGTH_LONG).show();
 			break;
 		default:
 			break;
-
 		}
 
 	}
 
 	// Convert the image URI to the direct file system path of the image file
-	private String getRealPathFromUri(Uri contentUri) {
+	private String getPathFromContentUri(Uri contentUri) {
 
 		String[] proj = { MediaColumns.DATA };
 		Cursor cursor = managedQuery(contentUri, proj, // Which columns to
