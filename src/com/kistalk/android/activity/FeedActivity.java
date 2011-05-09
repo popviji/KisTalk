@@ -173,8 +173,10 @@ public class FeedActivity extends ListActivity implements Constant {
 				.getDrawable(R.drawable.placeholder_image_small);
 
 		KT_SimpleCursorAdapter adapter = new KT_SimpleCursorAdapter(this,
-				R.layout.feed_item_layout, cur, DISPLAY_FIELDS, DISPLAY_VIEWS,
-				avatarPlaceholder, imageSmallPlaceholder, null);
+
+		R.layout.feed_item_layout, cur, FEEDACTIVITY_DISPLAY_FIELDS,
+				FEEDACTIVITY_DISPLAY_VIEWS, avatarPlaceholder,
+				imageSmallPlaceholder, null);
 
 		setListAdapter(adapter);
 
@@ -430,7 +432,8 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	};
 
-	private synchronized void getPosts(final int page, final String fetchComments) {
+	private synchronized void getPosts(final int page,
+			final String fetchComments) {
 
 		if (!sharedPrefs.getBoolean(KEY_REFRESHING_POSTS, false)) {
 			sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, true).commit();

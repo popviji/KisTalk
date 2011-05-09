@@ -158,12 +158,6 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		dbAdapter.open();
 		Cursor cur = dbAdapter.fetchComments(itemId);
 
-		String[] displayFields = new String[] { KEY_COM_USER_NAME,
-				KEY_COM_USER_AVATAR, KEY_COM_CONTENT, KEY_COM_DATE };
-
-		int[] displayViews = new int[] { R.id.user_name, R.id.avatar,
-				R.id.comment, R.id.date };
-
 		Resources res = getResources();
 		Drawable avatarPlaceholder = res
 				.getDrawable(R.drawable.placeholder_avatar);
@@ -171,7 +165,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 				.getDrawable(R.drawable.placeholder_image_big);
 
 		KT_SimpleCursorAdapter adapter = new KT_SimpleCursorAdapter(this,
-				R.layout.comment_item_layout, cur, displayFields, displayViews,
+				R.layout.comment_item_layout, cur, COMTHREAD_ACTIVITY_DISPLAY_FIELDS, COMTHREAD_ACTIVITY_DISPLAY_VIEWS,
 				avatarPlaceholder, null, imageBigPlaceholder);
 
 		setListAdapter(adapter);
