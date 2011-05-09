@@ -5,7 +5,7 @@ import com.kistalk.android.R;
 public interface Constant {
 
 	public static final String LOG_TAG = "KisTalk";
-	
+
 	public static final String LOGIN_SHARED_PREF_FILE = "LOGIN_SHARED_PREF_FILE";
 	/*
 	 * Intent constants
@@ -43,7 +43,7 @@ public interface Constant {
 	public static final String KEY_UPLOAD_IMAGE_DESCRIPTION = "KEY_UPLOAD_IMAGE_DESCRIPTION";
 	public static final String KEY_UPLOAD_IMAGE_PATH = "KEY_UPLOAD_IMAGE_PATH";
 	public static final String KEY_UPLOAD_IMAGE_BITMAP = "KEY_UPLOAD_IMAGE_BITMAP";
-	
+
 	public static final String KEY_CURRENT_IMAGE = "KEY_CURRENT_IMAGE";
 
 	// Key constants for ImageLoader, ImageLoaderHandler and ImageCache
@@ -89,18 +89,24 @@ public interface Constant {
 	public static final int DIALOG_LOGOUT = 13;
 
 	// Shared preference constant for synchronize threads
-	// The activity gets killed if an user turns his/hers android phone causes it to be killed
+	// The activity gets killed if an user turns his/hers android phone causes
+	// it to be killed
 	// Shared preference is persistent storage
 	public static final String KEY_REFRESHING_POSTS = "KEY_REFRESHING_POSTS";
 
 	// Databse constants
-	public static final String[] DISPLAY_FIELDS = { KEY_ITEM_USER_NAME,
-			KEY_ITEM_USER_AVATAR, KEY_ITEM_URL_SMALL, KEY_ITEM_DESCRIPTION,
-			KEY_ITEM_DATE, KEY_ITEM_NUM_OF_COMS };
-	public static final int[] DISPLAY_VIEWS = { R.id.user_name,
+	public static final String[] FEEDACTIVITY_DISPLAY_FIELDS = {
+			KEY_ITEM_USER_NAME, KEY_ITEM_USER_AVATAR, KEY_ITEM_URL_SMALL,
+			KEY_ITEM_DESCRIPTION, KEY_ITEM_DATE, KEY_ITEM_NUM_OF_COMS };
+	public static final int[] FEEDACTIVITY_DISPLAY_VIEWS = { R.id.user_name,
 			R.id.avatar, R.id.image, R.id.description, R.id.date,
 			R.id.num_of_comments };
-	
+	public static final String[] COMTHREAD_ACTIVITY_DISPLAY_FIELDS = {
+			KEY_COM_USER_NAME, KEY_COM_USER_AVATAR, KEY_COM_CONTENT,
+			KEY_COM_DATE };
+	public static final int[] COMTHREAD_ACTIVITY_DISPLAY_VIEWS = {
+			R.id.user_name, R.id.avatar, R.id.comment, R.id.date };
+
 	// Error messages
 	public static final String ERROR_MSG_EXT_APPLICATION = "Error: External application returned with failed result code";
 }

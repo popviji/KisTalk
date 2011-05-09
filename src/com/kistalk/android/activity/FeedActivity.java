@@ -156,7 +156,7 @@ public class FeedActivity extends ListActivity implements Constant {
 		Cursor cur = dbAdapter.fetchAllPosts();
 
 		KT_SimpleCursorAdapter adapter = new KT_SimpleCursorAdapter(this,
-				R.layout.feed_item_layout, cur, DISPLAY_FIELDS, DISPLAY_VIEWS);
+				R.layout.feed_item_layout, cur, FEEDACTIVITY_DISPLAY_FIELDS, FEEDACTIVITY_DISPLAY_VIEWS);
 
 		setListAdapter(adapter);
 
