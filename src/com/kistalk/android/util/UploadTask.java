@@ -38,15 +38,17 @@ public class UploadTask extends AsyncTask<KT_UploadMessage, Void, String>
 	private Context context;
 	private ProgressDialog progDialog;
 	private CommentThreadActivity cThreadActivity;
-	private short messageTag ;
-	
+	private short messageTag;
+	private boolean sucessful;
+
 	public UploadTask(Context context, CommentThreadActivity cThreadActivity) {
 		super();
 		this.context = context;
 		this.progDialog = new ProgressDialog(context);
 		this.cThreadActivity = cThreadActivity;
+		this.sucessful = false;
 	}
-	
+
 	public UploadTask(Context context) {
 		this(context, null);
 	}
@@ -90,19 +92,19 @@ public class UploadTask extends AsyncTask<KT_UploadMessage, Void, String>
 		KT_TransferManager transferManager = new KT_TransferManager();
 
 		messageTag = messages[0].getMessageTag();
-		
+
 		String status = "Upload failed";
 
 		/* If not cancelled or not gone through all items - do work */
-			Log.i(LOG_TAG, "Uploading message");
-			if (messages[0].getMessageTag() == UPLOAD_PHOTO_MESSAGE_TAG) {
-				if (transferManager.uploadPhotoMessage(messages[0]))
-					status = "Upload complete!";
+		Log.i(LOG_TAG, "Uploading message");
+		if (messages[0].getMessageTag() == UPLOAD_PHOTO_MESSAGE_TAG) {
+			if (transferManager.uploadPhotoMessage(messages[0]))
+				status = "Upload complete!";
+		} else if (messages[0].getMessageTag() == UPLOAD_COMMENT_MESSAGE_TAG) {
+			if (transferManager.uploadComment(messages[0])) {
+				sucessful = true;
 			}
-			else if (messages[0].getMessageTag() == UPLOAD_COMMENT_MESSAGE_TAG) {
-				if (transferManager.uploadComment(messages[0]))
-					status = "Upload complete!";
-			}
+		}
 
 		return status;
 	}
@@ -110,19 +112,21 @@ public class UploadTask extends AsyncTask<KT_UploadMessage, Void, String>
 	@Override
 	protected void onPostExecute(String result) {
 		progDialog.dismiss(); // Removes the progress dialog
-
-		AlertDialog.Builder builder = new AlertDialog.Builder(context);
-		builder.setMessage(result).setCancelable(true)
-				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int id) {
-						dialog.cancel();
-					}
-				});
-		(builder.create()).show();
-		
 		if (messageTag == UPLOAD_COMMENT_MESSAGE_TAG) {
-			cThreadActivity.commentPosted();
+			cThreadActivity.commentPosted(sucessful);
+		} else {
+			AlertDialog.Builder builder = new AlertDialog.Builder(context);
+			builder.setMessage(result)
+					.setCancelable(true)
+					.setPositiveButton("OK",
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+										int id) {
+									dialog.cancel();
+								}
+							});
+			(builder.create()).show();
 		}
 	}
 }

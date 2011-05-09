@@ -17,6 +17,7 @@ import com.kistalk.android.util.KT_XMLParser;
 import com.kistalk.android.util.UploadTask;
 
 import android.app.ListActivity;
+import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -41,10 +43,10 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 	private boolean refreshingPosts;
 
-	Animation rotate;
+	private Animation rotate;
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {		
+	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		dbAdapter = new DbAdapter(this);
 		itemId = getIntent().getIntExtra(KEY_ITEM_ID, 0);
@@ -53,6 +55,12 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		addImageAsHeader();
 		refreshingPosts = false;
 		loadAnimations();
+
+		// Hide soft keyboard hidden unless the user has selected the text field
+		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(
+				((EditText) findViewById(R.id.inputbox)).getWindowToken(),
+				InputMethodManager.HIDE_NOT_ALWAYS);
 	}
 
 	private void loadAnimations() {
@@ -94,7 +102,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	protected void onDestroy() {
 		super.onDestroy();
 	}
-	
+
 	/* Creates a user menu */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -114,7 +122,6 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 			return super.onOptionsItemSelected(item);
 		}
 	}
-
 
 	private void addImageAsHeader() {
 		// instantiate thread feed item layout
@@ -156,7 +163,9 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		Cursor cur = dbAdapter.fetchComments(itemId);
 
 		KT_SimpleCursorAdapter adapter = new KT_SimpleCursorAdapter(this,
-				R.layout.comment_item_layout, cur, COMTHREAD_ACTIVITY_DISPLAY_FIELDS, COMTHREAD_ACTIVITY_DISPLAY_VIEWS);
+				R.layout.comment_item_layout, cur,
+				COMTHREAD_ACTIVITY_DISPLAY_FIELDS,
+				COMTHREAD_ACTIVITY_DISPLAY_VIEWS);
 
 		setListAdapter(adapter);
 
@@ -197,10 +206,15 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 				});
 	}
 
-	public void commentPosted() {
+	public void commentPosted(boolean sucessful) {
 		((EditText) findViewById(R.id.inputbox)).setText("");
 		commentsRefreshPosts();
 
+		if (sucessful)
+			Toast.makeText(this, "Posted comment", Toast.LENGTH_LONG).show();
+		else
+			Toast.makeText(this, "Failed to post comment", Toast.LENGTH_LONG)
+					.show();
 	}
 
 	public void commentsRefreshPosts() {
