@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_height="wrap_content" android:layout_width="fill_parent" android:padding="5dip" android:id="@+id/wrapper">
+	android:layout_height="wrap_content" android:layout_width="fill_parent"
+	android:padding="5dip" android:id="@+id/wrapper">
 	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 		android:layout_width="fill_parent" android:layout_height="wrap_content"
 		android:orientation="horizontal" android:id="@+id/status_feed_item"
@@ -8,9 +9,8 @@
 		<LinearLayout android:layout_width="wrap_content"
 			android:id="@+id/left_column" android:layout_height="wrap_content"
 			android:orientation="vertical" android:paddingRight="10dip">
-			<ImageView android:src="@drawable/icon"
-				android:layout_height="wrap_content" android:layout_width="wrap_content"
-				android:id="@+id/avatar"></ImageView>
+			<ImageView android:layout_height="wrap_content" android:layout_width="wrap_content"
+				android:id="@+id/avatar" android:src="@drawable/placeholder_avatar"></ImageView>
 		</LinearLayout>
 		<LinearLayout android:id="@+id/right_column"
 			android:layout_height="wrap_content" android:orientation="vertical"
@@ -18,14 +18,14 @@
 			<TextView android:textStyle="bold" android:id="@+id/user_name"
 				android:layout_height="wrap_content" android:text="TextView"
 				android:layout_width="wrap_content" android:paddingBottom="10dip"></TextView>
-			<ImageView android:id="@+id/image" android:layout_width="wrap_content"
-				android:src="@drawable/image_placeholder" android:layout_height="wrap_content"
-				android:paddingBottom="10dip" android:adjustViewBounds="true"></ImageView>
+			<ImageView android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:paddingBottom="10dip" android:adjustViewBounds="true" android:src="@drawable/placeholder_image_small" android:id="@+id/image_small"></ImageView>
 			<TextView android:id="@+id/description" android:text="TextView"
 				android:layout_height="wrap_content" android:layout_width="wrap_content"></TextView>
 			<TextView android:id="@+id/date" android:layout_height="wrap_content"
 				android:text="TextView" android:textStyle="italic"
-				android:layout_width="fill_parent"></TextView>
+				android:layout_width="fill_parent" style="@style/Text_Date"></TextView>
 			<LinearLayout android:layout_width="fill_parent"
 				android:layout_height="wrap_content" android:orientation="horizontal"
 				android:id="@+id/comments_info">

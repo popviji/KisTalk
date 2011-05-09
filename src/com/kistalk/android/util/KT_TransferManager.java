@@ -46,7 +46,7 @@ public class KT_TransferManager implements Constant {
 		} catch (MalformedURLException e) {
 			Log.e("Bad URL", e.toString());
 		}
-		
+
 	}
 
 	/**
@@ -376,14 +376,20 @@ public class KT_TransferManager implements Constant {
 	 * 
 	 * @return Url data in a InputStream
 	 */
-	public static InputStream getXMLFile() throws URISyntaxException,
-			ClientProtocolException, IOException {
+	public static InputStream getFeed(int page, String fetchComments)
+			throws URISyntaxException, ClientProtocolException, IOException {
 		DefaultHttpClient client = new DefaultHttpClient();
 
-		Uri uri = new Uri.Builder().scheme(SCHEME).authority(HOST)
-				.path(XML_FILE_PATH)
+		Uri uri = new Uri.Builder()
+				.scheme(SCHEME)
+				.authority(HOST)
+				.path(XML_FEED_PATH)
 				.appendQueryParameter(ARG_USERNAME, FeedActivity.getUsername())
 				.appendQueryParameter(ARG_TOKEN, FeedActivity.getToken())
+				.appendQueryParameter(ARG_POSTS_PER_PAGE,
+						String.valueOf(POSTS_PER_PAGE))
+				.appendQueryParameter(ARG_PAGE, String.valueOf(page))
+				.appendQueryParameter(ARG_FETCH_COMMENTS, fetchComments)
 				.build();
 
 		HttpGet method = new HttpGet(new URI(uri.toString()));
@@ -391,4 +397,22 @@ public class KT_TransferManager implements Constant {
 		HttpResponse res = client.execute(method);
 		return res.getEntity().getContent();
 	}
+
+	public static InputStream getSingleThread(int itemId)
+			throws URISyntaxException, ClientProtocolException, IOException {
+		DefaultHttpClient client = new DefaultHttpClient();
+
+		Uri uri = new Uri.Builder().scheme(SCHEME).authority(HOST)
+				.path(XML_THREAD_PATH)
+				.appendQueryParameter(ARG_USERNAME, FeedActivity.getUsername())
+				.appendQueryParameter(ARG_TOKEN, FeedActivity.getToken())
+				.appendQueryParameter(ARG_ITEM_ID, String.valueOf(itemId))
+				.build();
+
+		HttpGet method = new HttpGet(new URI(uri.toString()));
+
+		HttpResponse res = client.execute(method);
+		return res.getEntity().getContent();
+	}
+
 }

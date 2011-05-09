@@ -23,7 +23,8 @@ public class ImageLoader implements Runnable, Constant {
 	private ImageLoaderHandler handler;
 	private ImageCache imageCache;
 
-	public ImageLoader(String imageUrl, ImageLoaderHandler handler, ImageCache imageCache) {
+	public ImageLoader(String imageUrl, ImageLoaderHandler handler,
+			ImageCache imageCache) {
 		this.imageUrl = imageUrl;
 		this.handler = handler;
 		this.imageCache = imageCache;
@@ -36,13 +37,10 @@ public class ImageLoader implements Runnable, Constant {
 	 */
 	public void run() {
 		Bundle bundle = new Bundle();
-		if (!imageCache.contains(imageUrl)) {
-			if (downloadImage())
-				bundle.putParcelable(KEY_BITMAP, imageCache.getBitmap(imageUrl));
-			else
-				bundle.putInt(KEY_RESOURCE, R.drawable.failed_to_download);
-		} else
-			bundle.putParcelable(KEY_BITMAP, imageCache.getBitmap(imageUrl));
+		if (!imageCache.contains(imageUrl))
+			if (!downloadImage())
+				return;
+		bundle.putParcelable(KEY_BITMAP, imageCache.getBitmap(imageUrl));
 		Message msg = new Message();
 		msg.setData(bundle);
 		handler.sendMessage(msg);

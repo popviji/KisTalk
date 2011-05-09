@@ -45,7 +45,7 @@ public class DbAdapter implements Constant {
 	private Context mCtx;
 
 	private Semaphore semMDB = new Semaphore(1);
-	
+
 	/*
 	 * Private static class DatabaseHelper which manages creation and upgrading
 	 * of database
@@ -98,15 +98,23 @@ public class DbAdapter implements Constant {
 
 	public void insertComments(LinkedList<ContentValues> comments) {
 		SQLiteDatabase sqDB = lockAndGetDBPointer();
-		for (ContentValues comment : comments)
-			sqDB.insert(DB_TABLE_COMMENTS, null, comment);
+		for (ContentValues comment : comments) {
+			if (sqDB.query(DB_TABLE_COMMENTS, null,
+					KEY_COM_ID + "=" + comment.getAsInteger(KEY_COM_ID),
+					null, null, null, null).getCount() == 0)
+				if (sqDB.insert(DB_TABLE_COMMENTS, null, comment) == -1)
+					Log.e(LOG_TAG, "Error while inserting post to db");
+		}
 		unlockDBPointer();
 	}
 
 	public void insertPost(ContentValues post) {
 		SQLiteDatabase sqDB = lockAndGetDBPointer();
-		if (sqDB.insert(DB_TABLE_POSTS, null, post) == -1)
-			Log.e(LOG_TAG, "Error while inserting post to db");
+		if (sqDB.query(DB_TABLE_POSTS, null,
+				KEY_ITEM_ID + "=" + post.getAsInteger(KEY_ITEM_ID), null, null,
+				null, null).getCount() == 0)
+			if (sqDB.insert(DB_TABLE_POSTS, null, post) == -1)
+				Log.e(LOG_TAG, "Error while inserting post to db");
 		unlockDBPointer();
 	}
 
@@ -124,30 +132,31 @@ public class DbAdapter implements Constant {
 
 	public void deleteAll() {
 		SQLiteDatabase sqDB = lockAndGetDBPointer();
-		
+
 		sqDB.delete(DB_TABLE_POSTS, null, null);
 		sqDB.delete(DB_TABLE_COMMENTS, null, null);
-		
+
 		unlockDBPointer();
 	}
 
 	public Cursor fetchAllPosts() {
-		Cursor cur = lockAndGetDBPointer().query(DB_TABLE_POSTS, null, null, null, null, null, null);
+		Cursor cur = lockAndGetDBPointer().query(DB_TABLE_POSTS, null, null,
+				null, null, null, null);
 		unlockDBPointer();
 		return cur;
 	}
 
 	public Cursor fetchComments(int itemId) {
-		Cursor cur = lockAndGetDBPointer().query(DB_TABLE_COMMENTS, null, KEY_ITEM_ID + "=" + itemId,
-				null, null, null, null);
+		Cursor cur = lockAndGetDBPointer().query(DB_TABLE_COMMENTS, null,
+				KEY_ITEM_ID + "=" + itemId, null, null, null, null);
 		unlockDBPointer();
 		return cur;
 	}
 
 	public Cursor fetchPost(long rowId) throws SQLException {
 
-		Cursor mCursor = lockAndGetDBPointer().query(true, DB_TABLE_POSTS, null, KEY_ROWID + "="
-				+ rowId, null, null, null, null, null);
+		Cursor mCursor = lockAndGetDBPointer().query(true, DB_TABLE_POSTS,
+				null, KEY_ROWID + "=" + rowId, null, null, null, null, null);
 		if (mCursor != null) {
 			mCursor.moveToFirst();
 		}
@@ -157,8 +166,8 @@ public class DbAdapter implements Constant {
 
 	public Cursor fetchPostFromId(long itemId) throws SQLException {
 
-		Cursor mCursor = lockAndGetDBPointer().query(true, DB_TABLE_POSTS, null, KEY_ITEM_ID
-				+ "=" + itemId, null, null, null, null, null);
+		Cursor mCursor = lockAndGetDBPointer().query(true, DB_TABLE_POSTS,
+				null, KEY_ITEM_ID + "=" + itemId, null, null, null, null, null);
 		if (mCursor != null) {
 			mCursor.moveToFirst();
 		}

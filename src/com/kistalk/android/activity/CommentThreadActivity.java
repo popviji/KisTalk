@@ -17,14 +17,18 @@ import com.kistalk.android.util.KT_XMLParser;
 import com.kistalk.android.util.UploadTask;
 
 import android.app.ListActivity;
+import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -44,7 +48,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	Animation rotate;
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {		
+	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		dbAdapter = new DbAdapter(this);
 		itemId = getIntent().getIntExtra(KEY_ITEM_ID, 0);
@@ -53,6 +57,11 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		addImageAsHeader();
 		refreshingPosts = false;
 		loadAnimations();
+
+		populateList();
+		addCommentForm();
+		((EditText) findViewById(R.id.inputbox))
+				.setText((String) getLastNonConfigurationInstance());
 	}
 
 	private void loadAnimations() {
@@ -62,11 +71,6 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		populateList();
-		addCommentForm();
-		((EditText) findViewById(R.id.inputbox))
-				.setText((String) getLastNonConfigurationInstance());
-
 	}
 
 	@Override
@@ -94,7 +98,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	protected void onDestroy() {
 		super.onDestroy();
 	}
-	
+
 	/* Creates a user menu */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -114,7 +118,6 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 			return super.onOptionsItemSelected(item);
 		}
 	}
-
 
 	private void addImageAsHeader() {
 		// instantiate thread feed item layout
@@ -138,7 +141,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 		// Set views
 		imageController.start(imageUrl,
-				(ImageView) imageItem.findViewById(R.id.image));
+				(ImageView) imageItem.findViewById(R.id.image_big));
 		imageController.start(avatarUrl,
 				(ImageView) imageItem.findViewById(R.id.avatar));
 		((TextView) imageItem.findViewById(R.id.user_name)).setText(userName);
@@ -161,8 +164,15 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		int[] displayViews = new int[] { R.id.user_name, R.id.avatar,
 				R.id.comment, R.id.date };
 
+		Resources res = getResources();
+		Drawable avatarPlaceholder = res
+				.getDrawable(R.drawable.placeholder_avatar);
+		Drawable imageBigPlaceholder = res
+				.getDrawable(R.drawable.placeholder_image_big);
+
 		KT_SimpleCursorAdapter adapter = new KT_SimpleCursorAdapter(this,
-				R.layout.comment_item_layout, cur, displayFields, displayViews);
+				R.layout.comment_item_layout, cur, displayFields, displayViews,
+				avatarPlaceholder, null, imageBigPlaceholder);
 
 		setListAdapter(adapter);
 
@@ -170,6 +180,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	}
 
 	private synchronized void addCommentForm() {
+
 		View commentForm = getLayoutInflater().inflate(
 				R.layout.thread_comment_form_layout, null);
 
@@ -221,21 +232,18 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 				@Override
 				protected Boolean doInBackground(DbAdapter... dbAdapters) {
 					try {
-						LinkedList<FeedItem> feedItems = KT_XMLParser
-								.fetchAndParse();
+						FeedItem feedItem = KT_XMLParser
+								.fetchAndParseSingleThread(itemId);
 
-						if (feedItems == null) {
+						if (feedItem == null) {
 							Log.e(LOG_TAG, "Problem when downloading XML file");
 							return false;
 						}
 
 						dbAdapters[0].open();
-						dbAdapters[0].deleteAll();
 
-						for (FeedItem feedItem : feedItems) {
-							dbAdapters[0].insertPost(feedItem.post);
-							dbAdapters[0].insertComments(feedItem.comments);
-						}
+						dbAdapters[0].insertComments(feedItem.comments);
+
 						dbAdapters[0].close();
 						return true;
 					} catch (XmlPullParserException e) {

@@ -3,7 +3,7 @@
 
 	<style name="app_theme" parent="@android:style/Theme.NoTitleBar">
 		<item name="android:windowBackground">@drawable/app_background</item>
-		<item name="android:textColor">#FFFFFF</item>
+		<item name="android:textColor">#FFFFFFFF</item>
 		<item name="android:listViewStyle">@style/TransparentListView</item>
 		<item name="android:expandableListViewStyle">@style/TransparentExpandableListView</item>
 	</style>
@@ -25,6 +25,11 @@
 	<style name="Text_Plain" parent="@android:style/TextAppearance.Small">
 	</style>
 
+	<style name="Text_Date">
+		<item name="android:textColor">#B0FFFFFF</item>
+	</style>
+
+
 	<style name="ListViewSyle">
 		<item name="android:divider">@android:color/transparent</item>
 		<item name="android:dividerHeight">0dip</item>
@@ -36,5 +41,7 @@
 		<item name="android:paddingLeft">20dip</item>
 		<item name="android:paddingRight">20dip</item>
 	</style>
+
+
 
 </resources>
