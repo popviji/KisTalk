@@ -1,9 +1,9 @@
 package com.kistalk.android.util;
 
 import com.kistalk.android.activity.CommentThreadActivity;
+import com.kistalk.android.activity.UploadActivity;
 import com.kistalk.android.base.KT_UploadMessage;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -32,25 +32,22 @@ import android.util.Log;
  * */
 
 /* The parameters are of the type ContentValues and the result is of type String */
-public class UploadTask extends AsyncTask<KT_UploadMessage, Void, String>
+public class UploadTask extends AsyncTask<KT_UploadMessage, Void, Boolean>
 		implements Constant {
 
 	private Context context;
 	private ProgressDialog progDialog;
 	private CommentThreadActivity cThreadActivity;
+	private UploadActivity uploadActivity;
 	private short messageTag;
-	private boolean sucessful;
 
-	public UploadTask(Context context, CommentThreadActivity cThreadActivity) {
+	public UploadTask(Context context, CommentThreadActivity cThreadActivity,
+			UploadActivity uploadActivty) {
 		super();
 		this.context = context;
 		this.progDialog = new ProgressDialog(context);
 		this.cThreadActivity = cThreadActivity;
-		this.sucessful = false;
-	}
-
-	public UploadTask(Context context) {
-		this(context, null);
+		this.uploadActivity = uploadActivty;
 	}
 
 	@Override
@@ -88,35 +85,41 @@ public class UploadTask extends AsyncTask<KT_UploadMessage, Void, String>
 	}
 
 	@Override
-	protected String doInBackground(KT_UploadMessage... messages) {
+	protected Boolean doInBackground(KT_UploadMessage... messages) {
 		KT_TransferManager transferManager = new KT_TransferManager();
 
 		messageTag = messages[0].getMessageTag();
-
-		String status = "Upload failed";
 
 		/* If not cancelled or not gone through all items - do work */
 		Log.i(LOG_TAG, "Uploading message");
 		if (messages[0].getMessageTag() == UPLOAD_PHOTO_MESSAGE_TAG) {
 			if (transferManager.uploadPhotoMessage(messages[0]))
-				status = "Upload complete!";
+				return true;
 		} else if (messages[0].getMessageTag() == UPLOAD_COMMENT_MESSAGE_TAG) {
 			if (transferManager.uploadComment(messages[0])) {
-				sucessful = true;
+				return true;
 			}
 		}
 
-		return status;
+		return false;
 	}
 
 	@Override
-	protected void onPostExecute(String result) {
+	protected void onPostExecute(Boolean result) {
 		progDialog.dismiss(); // Removes the progress dialog
 		if (messageTag == UPLOAD_COMMENT_MESSAGE_TAG) {
-			cThreadActivity.commentPosted(sucessful);
+			cThreadActivity.commentPosted(result.booleanValue());
 		} else {
+			String message;
+			if (result)
+				message = "Upload complete!";
+			else
+				message = "Upload failed!";
+
+			final boolean sucessful = result.booleanValue();
+
 			AlertDialog.Builder builder = new AlertDialog.Builder(context);
-			builder.setMessage(result)
+			builder.setMessage(message)
 					.setCancelable(true)
 					.setPositiveButton("OK",
 							new DialogInterface.OnClickListener() {
@@ -124,6 +127,10 @@ public class UploadTask extends AsyncTask<KT_UploadMessage, Void, String>
 								public void onClick(DialogInterface dialog,
 										int id) {
 									dialog.cancel();
+//									if (sucessful) {
+//										uploadActivity
+//												.finishActivityProcedure();
+//									}
 								}
 							});
 			(builder.create()).show();

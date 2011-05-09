@@ -2,7 +2,6 @@ package com.kistalk.android.activity;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.LinkedList;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -16,9 +15,14 @@ import com.kistalk.android.util.DbAdapter;
 import com.kistalk.android.util.KT_XMLParser;
 import com.kistalk.android.util.UploadTask;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.res.Resources;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,6 +31,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
@@ -56,11 +61,44 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		refreshingPosts = false;
 		loadAnimations();
 
-		// Hide soft keyboard hidden unless the user has selected the text field
-		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-		imm.hideSoftInputFromWindow(
-				((EditText) findViewById(R.id.inputbox)).getWindowToken(),
-				InputMethodManager.HIDE_NOT_ALWAYS);
+		populateList();
+		addCommentForm();
+		((EditText) findViewById(R.id.inputbox))
+				.setText((String) getLastNonConfigurationInstance());
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		Dialog dialog;
+		switch (id) {
+		case DIALOG_CLEAR_COMMENT_FIELD:
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setMessage("Clear comment field?")
+					.setCancelable(true)
+					.setPositiveButton("Yes",
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+										int id) {
+									((EditText) findViewById(R.id.inputbox))
+											.setText("");
+								}
+							})
+					.setNegativeButton("No",
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+										int id) {
+									dialog.cancel();
+								}
+							});
+			return builder.create();
+
+		default:
+			dialog = null;
+			break;
+		}
+		return dialog;
 	}
 
 	private void loadAnimations() {
@@ -70,11 +108,6 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	@Override
 	protected void onStart() {
 		super.onStart();
-		populateList();
-		addCommentForm();
-		((EditText) findViewById(R.id.inputbox))
-				.setText((String) getLastNonConfigurationInstance());
-
 	}
 
 	@Override
@@ -145,7 +178,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 		// Set views
 		imageController.start(imageUrl,
-				(ImageView) imageItem.findViewById(R.id.image));
+				(ImageView) imageItem.findViewById(R.id.image_big));
 		imageController.start(avatarUrl,
 				(ImageView) imageItem.findViewById(R.id.avatar));
 		((TextView) imageItem.findViewById(R.id.user_name)).setText(userName);
@@ -162,17 +195,26 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		dbAdapter.open();
 		Cursor cur = dbAdapter.fetchComments(itemId);
 
+		Resources res = getResources();
+		Drawable avatarPlaceholder = res
+				.getDrawable(R.drawable.placeholder_avatar);
+		Drawable imageBigPlaceholder = res
+				.getDrawable(R.drawable.placeholder_image_big);
+
 		KT_SimpleCursorAdapter adapter = new KT_SimpleCursorAdapter(this,
 				R.layout.comment_item_layout, cur,
 				COMTHREAD_ACTIVITY_DISPLAY_FIELDS,
-				COMTHREAD_ACTIVITY_DISPLAY_VIEWS);
+				COMTHREAD_ACTIVITY_DISPLAY_VIEWS, avatarPlaceholder, null,
+				imageBigPlaceholder);
 
 		setListAdapter(adapter);
 
 		dbAdapter.close();
 	}
 
+	/* Adds a comment form which is a fixed view at the bottom of the list */
 	private synchronized void addCommentForm() {
+
 		View commentForm = getLayoutInflater().inflate(
 				R.layout.thread_comment_form_layout, null);
 
@@ -184,34 +226,81 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 					@Override
 					public void onClick(View v) {
 
-						String comment = ((EditText) findViewById(R.id.inputbox))
-								.getText().toString().trim();
-						if (comment.length() < 3)
-							Toast.makeText(CommentThreadActivity.this,
-									"Comment too short", Toast.LENGTH_LONG)
-									.show();
-						else if (comment.length() > 500)
-							Toast.makeText(CommentThreadActivity.this,
-									"Comment too long", Toast.LENGTH_LONG)
-									.show();
-						else {
-							KT_UploadMessage message = new KT_UploadMessage(
-									null, comment, itemId,
-									UPLOAD_COMMENT_MESSAGE_TAG);
-							new UploadTask(CommentThreadActivity.this,
-									CommentThreadActivity.this)
-									.execute(message);
+						if (v.getId() == R.id.inputbox) {
+
+							String comment = ((EditText) findViewById(R.id.inputbox))
+									.getText().toString().trim();
+							if (comment.length() < 3)
+								Toast.makeText(CommentThreadActivity.this,
+										"Comment too short", Toast.LENGTH_LONG)
+										.show();
+							else if (comment.length() > 500)
+								Toast.makeText(CommentThreadActivity.this,
+										"Comment too long", Toast.LENGTH_LONG)
+										.show();
+							else {
+								KT_UploadMessage message = new KT_UploadMessage(
+										null, comment, itemId,
+										UPLOAD_COMMENT_MESSAGE_TAG);
+								new UploadTask(CommentThreadActivity.this,
+										CommentThreadActivity.this, null)
+										.execute(message);
+							}
 						}
+					}
+				});
+
+		// Normal OnClickListener for clear comment button
+		commentForm.findViewById(R.id.clear_comment_button).setOnClickListener(
+				new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						if (v.getId() == R.id.clear_comment_button) {
+							showDialog(DIALOG_CLEAR_COMMENT_FIELD);
+						}
+					}
+				});
+
+		// OnLongClickListener for clear comment button
+		commentForm.findViewById(R.id.clear_comment_button)
+				.setOnLongClickListener(new OnLongClickListener() {
+
+					@Override
+					public boolean onLongClick(View v) {
+						if (v.getId() == R.id.clear_comment_button) {
+							((EditText) findViewById(R.id.inputbox))
+									.setText("");
+							return true;
+						} else
+							return false;
 					}
 				});
 	}
 
+	/*
+	 * Called by the AsyncTask when the job is done
+	 * 
+	 * @param sucessful
+	 */
 	public void commentPosted(boolean sucessful) {
 		((EditText) findViewById(R.id.inputbox)).setText("");
+		((EditText) findViewById(R.id.inputbox)).clearFocus();
 		commentsRefreshPosts();
 
+		/*
+		 * Must be placed here in order it to properly clear focus and then let
+		 * the user again to comment the thread
+		 */
+		// Access the soft keyboard
+		InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		// Hide soft keyboard hidden unless the user has selected the text field
+		inputMethodManager.hideSoftInputFromWindow(
+				((EditText) findViewById(R.id.inputbox)).getWindowToken(),
+				InputMethodManager.HIDE_NOT_ALWAYS);
+
 		if (sucessful)
-			Toast.makeText(this, "Posted comment", Toast.LENGTH_LONG).show();
+			Toast.makeText(this, "Comment posted", Toast.LENGTH_LONG).show();
 		else
 			Toast.makeText(this, "Failed to post comment", Toast.LENGTH_LONG)
 					.show();
@@ -229,21 +318,18 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 				@Override
 				protected Boolean doInBackground(DbAdapter... dbAdapters) {
 					try {
-						LinkedList<FeedItem> feedItems = KT_XMLParser
-								.fetchAndParse();
+						FeedItem feedItem = KT_XMLParser
+								.fetchAndParseSingleThread(itemId);
 
-						if (feedItems == null) {
+						if (feedItem == null) {
 							Log.e(LOG_TAG, "Problem when downloading XML file");
 							return false;
 						}
 
 						dbAdapters[0].open();
-						dbAdapters[0].deleteAll();
 
-						for (FeedItem feedItem : feedItems) {
-							dbAdapters[0].insertPost(feedItem.post);
-							dbAdapters[0].insertComments(feedItem.comments);
-						}
+						dbAdapters[0].insertComments(feedItem.comments);
+
 						dbAdapters[0].close();
 						return true;
 					} catch (XmlPullParserException e) {

@@ -1,6 +1,7 @@
 package com.kistalk.android.util;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.LinkedList;
@@ -30,6 +31,7 @@ public class KT_XMLParser implements Constant {
 	public static final String TAG_ITEM_USER_AVATAR = "image-user-avatar";
 	public static final String TAG_ITEM_DESCRIPTION = "image-description";
 	public static final String TAG_ITEM_DATE = "image-created_at";
+	public static final String TAG_ITEM_NUM_OF_COMS = "image-number-of-comments";
 	public static final String TAG_ITEM_COMMENTS = "comments";
 
 	// Tag constants for feed item comments
@@ -45,6 +47,12 @@ public class KT_XMLParser implements Constant {
 	// private static SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat(
 	// "yyyy-MM-dd HH:mm:ss z"); // Example: 2011-04-06 07:48:53 UTC
 
+	
+	public static FeedItem fetchAndParseSingleThread(int itemId)
+			throws XmlPullParserException, IOException, URISyntaxException {
+		return parse(KT_TransferManager.getSingleThread(itemId)).getFirst();
+	}
+
 	/**
 	 * Parse method. The main method of the class. Takes a url string as an
 	 * input parameter and construct FeedItem objects. The FeedItem objects all
@@ -55,17 +63,21 @@ public class KT_XMLParser implements Constant {
 	 * @return list of FeedItem objects
 	 */
 
-	public static LinkedList<FeedItem> fetchAndParse()
-			throws XmlPullParserException, ClientProtocolException,
-			URISyntaxException, IOException {
+	public static LinkedList<FeedItem> fetchAndParse(int page,
+			String fetchComments) throws XmlPullParserException,
+			ClientProtocolException, URISyntaxException, IOException {
+		return parse(KT_TransferManager.getFeed(page, fetchComments));
 
+	}
+
+	private static LinkedList<FeedItem> parse(InputStream is)
+			throws XmlPullParserException, IOException {
 		XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
 		factory.setNamespaceAware(true);
 		XmlPullParser xmlpp = factory.newPullParser();
 
 		// Put XML file into the parser
-		xmlpp.setInput(new InputStreamReader(KT_TransferManager
-				.getXMLFile()));
+		xmlpp.setInput(new InputStreamReader(is));
 
 		if (findStartTag(TAG_DOCUMENT, xmlpp, TAG_DOCUMENT)) {
 			return stepIntoDocument(xmlpp);
@@ -88,7 +100,8 @@ public class KT_XMLParser implements Constant {
 			String currentTag = xmlpp.getName();
 
 			if (currentTag.equalsIgnoreCase(TAG_ITEM_ID))
-				feedItem.post.put(KEY_ITEM_ID, Integer.valueOf(xmlpp.nextText().trim()));
+				feedItem.post.put(KEY_ITEM_ID,
+						Integer.valueOf(xmlpp.nextText().trim()));
 
 			else if (currentTag.equalsIgnoreCase(TAG_ITEM_URL_BIG))
 				feedItem.post.put(KEY_ITEM_URL_BIG, xmlpp.nextText().trim());
@@ -97,25 +110,30 @@ public class KT_XMLParser implements Constant {
 				feedItem.post.put(KEY_ITEM_URL_SMALL, xmlpp.nextText().trim());
 
 			else if (currentTag.equalsIgnoreCase(TAG_ITEM_USER_ID))
-				feedItem.post.put(KEY_ITEM_USER_ID, Integer.valueOf(xmlpp.nextText().trim()));
+				feedItem.post.put(KEY_ITEM_USER_ID,
+						Integer.valueOf(xmlpp.nextText().trim()));
 
 			else if (currentTag.equalsIgnoreCase(TAG_ITEM_USER_NAME))
 				feedItem.post.put(KEY_ITEM_USER_NAME, xmlpp.nextText().trim());
-			
+
 			else if (currentTag.equalsIgnoreCase(TAG_ITEM_USER_AVATAR))
-				feedItem.post.put(KEY_ITEM_USER_AVATAR, xmlpp.nextText().trim());
+				feedItem.post
+						.put(KEY_ITEM_USER_AVATAR, xmlpp.nextText().trim());
 
 			else if (currentTag.equalsIgnoreCase(TAG_ITEM_DESCRIPTION))
-				feedItem.post.put(KEY_ITEM_DESCRIPTION, xmlpp.nextText().trim());
+				feedItem.post
+						.put(KEY_ITEM_DESCRIPTION, xmlpp.nextText().trim());
 
 			else if (currentTag.equalsIgnoreCase(TAG_ITEM_DATE))
 				feedItem.post.put(KEY_ITEM_DATE, xmlpp.nextText().trim());
 
+			else if (currentTag.equalsIgnoreCase(TAG_ITEM_NUM_OF_COMS))
+				feedItem.post.put(KEY_ITEM_NUM_OF_COMS,
+						Integer.valueOf(xmlpp.nextText().trim()));
+
 			else if (currentTag.equalsIgnoreCase(TAG_ITEM_COMMENTS))
 				stepIntoComments(xmlpp, feedItem.comments);
 		}
-
-		feedItem.post.put(KEY_ITEM_NUM_OF_COMS, feedItem.comments.size());
 
 		int itemID = feedItem.post.getAsInteger(KEY_ITEM_ID);
 		for (ContentValues comment : feedItem.comments)
@@ -138,14 +156,16 @@ public class KT_XMLParser implements Constant {
 			String currentTag = xmlpp.getName();
 
 			if (currentTag.equalsIgnoreCase(TAG_COM_ID))
-				comment.put(KEY_COM_ID, Integer.valueOf(xmlpp.nextText().trim()));
+				comment.put(KEY_COM_ID,
+						Integer.valueOf(xmlpp.nextText().trim()));
 
 			else if (currentTag.equalsIgnoreCase(TAG_COM_USER_ID))
-				comment.put(KEY_COM_USER_ID, Integer.valueOf(xmlpp.nextText().trim()));
+				comment.put(KEY_COM_USER_ID,
+						Integer.valueOf(xmlpp.nextText().trim()));
 
 			else if (currentTag.equalsIgnoreCase(TAG_COM_USER_NAME))
 				comment.put(KEY_COM_USER_NAME, xmlpp.nextText().trim());
-			
+
 			else if (currentTag.equalsIgnoreCase(TAG_COM_USER_AVATAR))
 				comment.put(KEY_COM_USER_AVATAR, xmlpp.nextText().trim());
 

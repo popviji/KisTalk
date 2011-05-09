@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.annotation.Target;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -33,6 +32,7 @@ import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 import android.view.animation.AnimationUtils;
@@ -115,13 +115,40 @@ public class UploadActivity extends Activity implements Constant,
 
 		sendButton = (Button) findViewById(R.id.send_button);
 		sendButton.setOnClickListener(onCL);
+
+		// Normal OnClickListener for clear comment button
+		findViewById(R.id.clear_comment_button).setOnClickListener(
+				new OnClickListener() {
+
+					@Override
+					public void onClick(View v) {
+						if (v.getId() == R.id.clear_comment_button) {
+							showDialog(DIALOG_CLEAR_COMMENT_FIELD);
+						}
+					}
+				});
+
+		// OnLongClickListener for clear comment button
+		findViewById(R.id.clear_comment_button).setOnLongClickListener(
+				new OnLongClickListener() {
+
+					@Override
+					public boolean onLongClick(View v) {
+						if (v.getId() == R.id.clear_comment_button) {
+							((EditText) findViewById(R.id.inputbox))
+									.setText("");
+							return true;
+						} else
+							return false;
+					}
+				});
 	}
 
 	@Override
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog;
 		switch (id) {
-		case DIALOG_CHOOSE_OPTION_ID:
+		case DIALOG_CHOOSE_OPTION:
 			AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle("Pick an option").setCancelable(true)
 					.setItems(OPTIONS, new DialogInterface.OnClickListener() {
@@ -136,16 +163,48 @@ public class UploadActivity extends Activity implements Constant,
 					});
 			return builder.create();
 
+		case DIALOG_CLEAR_COMMENT_FIELD:
+			AlertDialog.Builder secondBuilder = new AlertDialog.Builder(this);
+			secondBuilder
+					.setMessage("Clear comment field?")
+					.setCancelable(true)
+					.setPositiveButton("Yes",
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+										int id) {
+									((EditText) findViewById(R.id.inputbox))
+											.setText("");
+								}
+							})
+					.setNegativeButton("No",
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+										int id) {
+									dialog.cancel();
+								}
+							});
+			return secondBuilder.create();
+
 		default:
 			dialog = null;
+			break;
 		}
 		return dialog;
 	}
 
+	public void finishActivityProcedure() {
+		Intent refreshIntent = new Intent(this, FeedActivity.class);
+		refreshIntent.putExtra(KEY_REFRESH_REQUEST, true);
+		startActivityForResult(refreshIntent, REFRESH_REQUEST);
+		finish();
+	}
+
 	private void checkLoginState() {
-		
-    	sp = getSharedPreferences(LOGIN_SHARED_PREF_FILE, MODE_PRIVATE);
-		
+
+		sp = getSharedPreferences(LOGIN_SHARED_PREF_FILE, MODE_PRIVATE);
+
 		username = sp.getString(ARG_USERNAME, null);
 		token = sp.getString(ARG_TOKEN, null);
 
@@ -215,7 +274,7 @@ public class UploadActivity extends Activity implements Constant,
 				if (intent != null) {
 					Uri recievedUri = intent.getData();
 					currentImagePath = getPathFromContentURI(recievedUri);
-					
+
 					startProcedure();
 				}
 			} else
@@ -256,11 +315,12 @@ public class UploadActivity extends Activity implements Constant,
 					else {
 						KT_UploadMessage message = new KT_UploadMessage(
 								newPath, comment, -1, UPLOAD_PHOTO_MESSAGE_TAG);
-						new UploadTask(UploadActivity.this).execute(message);
+						new UploadTask(UploadActivity.this, null,
+								UploadActivity.this).execute(message);
 					}
 					break;
 				case R.id.upload_image:
-					showDialog(DIALOG_CHOOSE_OPTION_ID);
+					showDialog(DIALOG_CHOOSE_OPTION);
 					break;
 
 				default:
