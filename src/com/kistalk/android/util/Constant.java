@@ -18,7 +18,7 @@ public interface Constant {
 	public static final int REQUEST_QR_READER = 1340;
 	
 	public static final String KEY_REFRESH_REQUEST = "REFRESH_REQUEST";
-	public static final int REFRESH_REQUEST = 77;
+	public static final int UPLOAD_REQUEST = 77;
 
 	/*
 	 * Key constants for ContentValues

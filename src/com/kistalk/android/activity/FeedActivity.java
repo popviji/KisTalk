@@ -85,7 +85,6 @@ public class FeedActivity extends ListActivity implements Constant {
 		getListView().addFooterView(moreImagesButton);
 		setOnClickListeners();
 		loadAnimations();
-
 		// UI setup end
 
 		restoreImageCache(savedInstanceState);
@@ -138,13 +137,6 @@ public class FeedActivity extends ListActivity implements Constant {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		Bundle extras = getIntent().getExtras();
-		if (extras != null) {
-			if (extras.getBoolean(KEY_REFRESH_REQUEST)) {
-				refreshLatestPosts();
-				getIntent().removeExtra(KEY_REFRESH_REQUEST);
-			}
-		}
 	}
 
 	@Override
@@ -417,7 +409,7 @@ public class FeedActivity extends ListActivity implements Constant {
 		uploadIntent.putExtra(KEY_UPLOAD_IMAGE_PATH, pathToImage);
 
 		try {
-			this.startActivity(uploadIntent);
+			this.startActivityForResult(uploadIntent, UPLOAD_REQUEST);
 		} catch (Exception e) {
 			Log.e(LOG_TAG, e.toString());
 		}
@@ -528,6 +520,14 @@ public class FeedActivity extends ListActivity implements Constant {
 				Toast.makeText(this, ERROR_MSG_EXT_APPLICATION,
 						Toast.LENGTH_LONG).show();
 			break;
+
+		case UPLOAD_REQUEST:
+			if (resultCode == RESULT_OK) {
+				Toast.makeText(this, "Upload sucessful", Toast.LENGTH_LONG).show();
+				refreshLatestPosts();
+			}
+			break;
+
 		default:
 			break;
 		}

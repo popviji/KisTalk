@@ -226,7 +226,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 					@Override
 					public void onClick(View v) {
 
-						if (v.getId() == R.id.inputbox) {
+						if (v.getId() == R.id.comment_button) {
 
 							String comment = ((EditText) findViewById(R.id.inputbox))
 									.getText().toString().trim();
