@@ -285,21 +285,6 @@ public class FeedActivity extends ListActivity implements Constant {
 	}
 
 	private void setOnClickListeners() {
-		/*
-		 * Refresh button that refreshes all feed items
-		 */
-		getListView().setOnItemClickListener(new OnItemClickListener() {
-
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				SimpleCursorAdapter adapter = (SimpleCursorAdapter) getListAdapter();
-				Cursor cur = adapter.getCursor();
-				int itemId = cur.getInt(cur.getColumnIndex(KEY_ITEM_ID));
-				showComments(itemId);
-
-			}
-		});
 
 		/*
 		 * Button that allows file uploading of picture
@@ -325,7 +310,7 @@ public class FeedActivity extends ListActivity implements Constant {
 		});
 	}
 
-	public void coolMethod(View v) {
+	public void onListItemClick(View v) {
 		SimpleCursorAdapter adapter = (SimpleCursorAdapter) getListAdapter();
 		Cursor cur = adapter.getCursor();
 		int itemId = cur.getInt(cur.getColumnIndex(KEY_ITEM_ID));
