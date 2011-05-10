@@ -18,36 +18,27 @@
 						android:layout_width="fill_parent" android:background="@drawable/list_item_shape"
 						android:layout_height="wrap_content">
 						<ImageView android:adjustViewBounds="true"
-							android:src="@drawable/image_placeholder" android:id="@+id/upload_image"
+							android:id="@+id/upload_image"
 							android:layout_width="fill_parent" android:layout_height="wrap_content"
-							android:scaleType="centerInside"></ImageView>
+							android:scaleType="centerInside" android:src="@drawable/placeholder_image_big"></ImageView>
 					</LinearLayout>
 				</LinearLayout>
 				<LinearLayout android:id="@+id/linearLayout2"
 					android:layout_width="fill_parent" android:layout_height="wrap_content"
 					android:padding="5dip">
-					<RelativeLayout android:id="@+id/relativeLayout1"
-						android:layout_width="wrap_content" android:layout_height="wrap_content"
-						android:background="@drawable/list_item_shape">
-						<TextView android:paddingBottom="10dip"
-							android:layout_below="@id/upload_image" android:layout_height="wrap_content"
-							android:layout_width="wrap_content" android:text="@string/upload_type_comment"
-							android:id="@+id/label"></TextView>
-						<EditText android:background="@android:drawable/editbox_background"
-							android:layout_below="@id/label" android:layout_height="wrap_content"
-							android:paddingBottom="10dip" android:layout_width="fill_parent"
-							android:text="" android:id="@+id/inputbox"></EditText>
-						<Button android:layout_alignRight="@id/inputbox"
-							android:layout_below="@id/inputbox" android:layout_height="wrap_content"
-							android:id="@+id/send_button" android:layout_width="wrap_content"
-							style="@style/SubmitButtonStyle" android:background="@drawable/submit_button_shape"
-							android:text="@string/upload_send_button"></Button>
-						<Button android:layout_below="@id/inputbox"
-							android:layout_alignLeft="@id/inputbox" android:layout_height="wrap_content"
-							android:id="@+id/clear_comment_button" android:layout_width="wrap_content"
-							android:paddingTop="25dip" android:paddingRight="25dip"
-							android:paddingLeft="25dip" android:background="@drawable/ic_menu_end_conversation" />
-					</RelativeLayout>
+						<RelativeLayout android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:id="@+id/thread_comment_form"
+		android:background="@drawable/list_item_shape">
+		<TextView android:id="@+id/label" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:text="@string/upload_type_comment"
+			android:paddingBottom="10dip" />
+		<EditText android:id="@+id/inputbox" android:layout_width="fill_parent"
+			android:layout_height="wrap_content" android:background="@android:drawable/editbox_background"
+			android:layout_below="@id/label" />
+		<FrameLayout android:layout_width="wrap_content" android:layout_below="@+id/inputbox" android:layout_alignLeft="@+id/inputbox" android:layout_alignRight="@+id/inputbox" android:layout_height="5dip" android:id="@+id/spacer"></FrameLayout>
+		<ImageView android:layout_width="wrap_content" android:background="@drawable/clear_button_shape" android:id="@+id/clear_comment_button" android:layout_height="wrap_content" android:src="@drawable/ic_menu_end_conversation" android:layout_below="@+id/spacer" android:layout_alignLeft="@+id/spacer" android:focusable="true"></ImageView>
+		<Button android:capitalize="sentences" android:background="@drawable/submit_button_shape" android:layout_width="wrap_content" android:text="@string/comment" style="@style/SubmitButtonStyle" android:paddingTop="10dip" android:layout_height="wrap_content" android:layout_below="@+id/spacer" android:layout_alignRight="@+id/spacer" android:id="@+id/send_button" android:focusable="true"></Button>
+	</RelativeLayout>
 				</LinearLayout>
 			</LinearLayout>
 		</ScrollView>

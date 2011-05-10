@@ -325,6 +325,13 @@ public class FeedActivity extends ListActivity implements Constant {
 		});
 	}
 
+	public void coolMethod(View v) {
+		SimpleCursorAdapter adapter = (SimpleCursorAdapter) getListAdapter();
+		Cursor cur = adapter.getCursor();
+		int itemId = cur.getInt(cur.getColumnIndex(KEY_ITEM_ID));
+		showComments(itemId);
+	}
+
 	protected void downloadMoreImages() {
 		int lastPage = sharedPrefs.getInt(KEY_LAST_PAGE, 1);
 		getPosts(lastPage + 1, FETCH_NO_COMMENTS);
