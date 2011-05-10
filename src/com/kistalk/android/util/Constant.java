@@ -16,6 +16,7 @@ public interface Constant {
 	public static final int REQUEST_GET_CAMERA_PIC = 1338;
 	public static final int LOGIN_REQUEST = 1339;
 	public static final int REQUEST_QR_READER = 1340;
+	public static final int REQUEST_THREAD_VIEW = 1341;
 	
 	public static final String KEY_REFRESH_REQUEST = "REFRESH_REQUEST";
 	public static final int UPLOAD_REQUEST = 77;

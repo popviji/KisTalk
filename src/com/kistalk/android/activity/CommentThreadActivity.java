@@ -20,6 +20,7 @@ import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
@@ -46,7 +47,9 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	private ImageController imageController;
 	private DbAdapter dbAdapter;
 
-	private boolean refreshingPosts;
+	private SharedPreferences sharedPrefs;
+
+	private KT_SimpleCursorAdapter cursorAdapter;
 
 	private Animation rotate;
 
@@ -58,10 +61,16 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		setContentView(R.layout.thread_view_layout);
 		imageController = FeedActivity.imageController;
 		addImageAsHeader();
-		refreshingPosts = false;
 		loadAnimations();
 
-		populateList();
+		sharedPrefs = getSharedPreferences(LOGIN_SHARED_PREF_FILE, MODE_PRIVATE);
+
+		if (savedInstanceState == null) {
+			sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
+			refreshThread();
+		}
+
+		cursorAdapter = initializeListAdapter();
 		addCommentForm();
 		((EditText) findViewById(R.id.inputbox))
 				.setText((String) getLastNonConfigurationInstance());
@@ -149,7 +158,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_refresh:
-			commentsRefreshPosts();
+			refreshThread();
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -190,7 +199,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		getListView().addHeaderView(imageItem);
 	}
 
-	private synchronized void populateList() {
+	private synchronized KT_SimpleCursorAdapter initializeListAdapter() {
 
 		dbAdapter.open();
 		Cursor cur = dbAdapter.fetchComments(itemId);
@@ -209,6 +218,15 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 		setListAdapter(adapter);
 
+		dbAdapter.close();
+
+		return adapter;
+	}
+
+	private void updateAdapter() {
+		dbAdapter.open();
+		Cursor cur = dbAdapter.fetchComments(itemId);
+		cursorAdapter.changeCursor(cur);
 		dbAdapter.close();
 	}
 
@@ -283,10 +301,10 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	 * 
 	 * @param sucessful
 	 */
-	public void commentPosted(boolean sucessful) {
+	public void commentPosted(boolean successful) {
 		((EditText) findViewById(R.id.inputbox)).setText("");
 		((EditText) findViewById(R.id.inputbox)).clearFocus();
-		commentsRefreshPosts();
+		refreshThread();
 
 		/*
 		 * Must be placed here in order it to properly clear focus and then let
@@ -299,17 +317,17 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 				((EditText) findViewById(R.id.inputbox)).getWindowToken(),
 				InputMethodManager.HIDE_NOT_ALWAYS);
 
-		if (sucessful)
+		if (successful)
 			Toast.makeText(this, "Comment posted", Toast.LENGTH_LONG).show();
 		else
 			Toast.makeText(this, "Failed to post comment", Toast.LENGTH_LONG)
 					.show();
 	}
 
-	public void commentsRefreshPosts() {
+	public void refreshThread() {
 
-		if (!refreshingPosts) {
-			refreshingPosts = true;
+		if (!sharedPrefs.getBoolean(KEY_REFRESHING_POSTS, false)) {
+			sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, true).commit();
 			findViewById(R.id.refresh_button).setVisibility(View.VISIBLE);
 			findViewById(R.id.refresh_button).startAnimation(rotate);
 
@@ -328,8 +346,9 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 						dbAdapters[0].open();
 
+						dbAdapters[0].insertPost(feedItem.post);
 						dbAdapters[0].insertComments(feedItem.comments);
-
+						
 						dbAdapters[0].close();
 						return true;
 					} catch (XmlPullParserException e) {
@@ -344,15 +363,17 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 				@Override
 				protected void onPostExecute(Boolean successful) {
+					sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, false)
+							.commit();
 					findViewById(R.id.refresh_button).clearAnimation();
 					findViewById(R.id.refresh_button).setVisibility(
 							View.INVISIBLE);
 					if (successful) {
-						populateList();
+						updateAdapter();
 					} else
 						Toast.makeText(CommentThreadActivity.this,
 								"Refresh failed", Toast.LENGTH_SHORT).show();
-					refreshingPosts = false;
+
 					cancel(true);
 				}
 			}.execute(dbAdapter);

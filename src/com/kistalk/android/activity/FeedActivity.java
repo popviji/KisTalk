@@ -395,7 +395,8 @@ public class FeedActivity extends ListActivity implements Constant {
 		commentIntent.setAction(Intent.ACTION_VIEW);
 		commentIntent.putExtra(KEY_ITEM_ID, itemId);
 		try {
-			FeedActivity.this.startActivity(commentIntent);
+			FeedActivity.this.startActivityForResult(commentIntent,
+					REQUEST_THREAD_VIEW);
 		} catch (Exception e) {
 			Log.e(LOG_TAG, e.toString());
 		}
@@ -514,17 +515,19 @@ public class FeedActivity extends ListActivity implements Constant {
 					String realPath = getPathFromContentUri(recievedUri);
 					showUploadView(realPath);
 				}
-			} else
-				Toast.makeText(this, ERROR_MSG_EXT_APPLICATION,
-						Toast.LENGTH_LONG).show();
+			}
 			break;
 
 		case UPLOAD_REQUEST:
 			if (resultCode == RESULT_OK) {
-				Toast.makeText(this, "Upload sucessful", Toast.LENGTH_LONG)
+				Toast.makeText(this, "Upload successful", Toast.LENGTH_LONG)
 						.show();
 				refreshLatestPosts();
 			}
+			break;
+
+		case REQUEST_THREAD_VIEW:
+			updateAdapter();
 			break;
 
 		default:
