@@ -100,8 +100,8 @@ public class DbAdapter implements Constant {
 		SQLiteDatabase sqDB = lockAndGetDBPointer();
 		for (ContentValues comment : comments) {
 			if (sqDB.query(DB_TABLE_COMMENTS, null,
-					KEY_COM_ID + "=" + comment.getAsInteger(KEY_COM_ID),
-					null, null, null, null).getCount() == 0)
+					KEY_COM_ID + "=" + comment.getAsInteger(KEY_COM_ID), null,
+					null, null, null).getCount() == 0)
 				if (sqDB.insert(DB_TABLE_COMMENTS, null, comment) == -1)
 					Log.e(LOG_TAG, "Error while inserting post to db");
 		}
@@ -110,11 +110,17 @@ public class DbAdapter implements Constant {
 
 	public void insertPost(ContentValues post) {
 		SQLiteDatabase sqDB = lockAndGetDBPointer();
+
 		if (sqDB.query(DB_TABLE_POSTS, null,
 				KEY_ITEM_ID + "=" + post.getAsInteger(KEY_ITEM_ID), null, null,
-				null, null).getCount() == 0)
-			if (sqDB.insert(DB_TABLE_POSTS, null, post) == -1)
-				Log.e(LOG_TAG, "Error while inserting post to db");
+				null, null).getCount() == 1)
+			sqDB.update(DB_TABLE_POSTS, post,
+					KEY_ITEM_ID + "=" + post.getAsInteger(KEY_ITEM_ID), null);
+		else
+			sqDB.insert(DB_TABLE_POSTS, null, post);
+
+		// if (sqDB.insert(DB_TABLE_POSTS, null, post) == -1)
+		// Log.e(LOG_TAG, "Error while inserting post to db");
 		unlockDBPointer();
 	}
 

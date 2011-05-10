@@ -8,7 +8,7 @@
 		android:paddingTop="5dip" android:paddingBottom="5dip">
 		<LinearLayout android:layout_height="wrap_content"
 			android:layout_width="fill_parent" android:id="@+id/com_column"
-			android:background="@drawable/list_item_shape">
+			android:background="@drawable/list_item_shape" android:clickable="false" android:focusable="true" android:onClick="onListItemClick" android:longClickable="true">
 			<LinearLayout android:layout_height="wrap_content"
 				android:paddingRight="10dip" android:layout_width="wrap_content"
 				android:id="@+id/com_left_column" android:orientation="vertical">
@@ -24,6 +24,7 @@
 					android:text="TextView"></TextView>
 				<TextView android:id="@+id/comment" android:layout_width="wrap_content"
 					android:layout_height="wrap_content" android:text="TextView"></TextView>
+				<TextView android:id="@+id/com_id" android:text="TextView" android:layout_width="wrap_content" android:layout_height="wrap_content" android:visibility="gone"></TextView>
 				<TextView android:textStyle="italic" android:id="@+id/date"
 					android:layout_width="fill_parent" android:layout_height="wrap_content"
 					android:text="TextView" style="@style/Text_Date"></TextView>

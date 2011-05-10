@@ -202,7 +202,7 @@ public class UploadActivity extends Activity implements Constant,
 
 	private void checkLoginState() {
 
-		sp = getSharedPreferences(LOGIN_SHARED_PREF_FILE, MODE_PRIVATE);
+		sp = getSharedPreferences(SHARED_PREF_FILE, MODE_PRIVATE);
 
 		username = sp.getString(ARG_USERNAME, null);
 		token = sp.getString(ARG_TOKEN, null);

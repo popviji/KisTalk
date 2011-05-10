@@ -2,6 +2,7 @@ package com.kistalk.android.activity;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.StringTokenizer;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -15,15 +16,17 @@ import com.kistalk.android.util.DbAdapter;
 import com.kistalk.android.util.KT_XMLParser;
 import com.kistalk.android.util.UploadTask;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -36,12 +39,8 @@ import android.view.View.OnLongClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,28 +49,45 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	private int itemId;
 	private ImageController imageController;
 	private DbAdapter dbAdapter;
-
-	private boolean refreshingPosts;
-
+	private SharedPreferences sharedPrefs;
+	private KT_SimpleCursorAdapter cursorAdapter;
 	private Animation rotate;
+	private CharSequence urlLink = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		dbAdapter = new DbAdapter(this);
 		itemId = getIntent().getIntExtra(KEY_ITEM_ID, 0);
-		setContentView(R.layout.thread_view_layout);
 		imageController = FeedActivity.imageController;
-		addImageAsHeader();
-		refreshingPosts = false;
-		loadAnimations();
+		sharedPrefs = getSharedPreferences(SHARED_PREF_FILE, MODE_PRIVATE);
+		rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_indefinately);
 
-		populateList();
+		// UI setup
+		setContentView(R.layout.thread_view_layout);
+		addImageAsHeader();
 		addCommentForm();
-		((EditText) findViewById(R.id.inputbox))
-				.setText((String) getLastNonConfigurationInstance());
-		
-		
+
+		cursorAdapter = initializeListAdapter();
+
+		if (savedInstanceState == null) {
+			sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
+			refreshThread();
+		} else
+			((EditText) findViewById(R.id.inputbox))
+					.setText((String) getLastNonConfigurationInstance());
+
+		// findViewById(R.id.image_big).setOnLongClickListener(
+		// new OnLongClickListener() {
+		//
+		// @Override
+		// public boolean onLongClick(View v) {
+		// if (v.getId() == R.id.image_big) {
+		// return true;
+		// } else
+		// return false;
+		// }
+		// });
 	}
 
 	@Override
@@ -101,41 +117,74 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 							});
 			return builder.create();
 
+		case DIALOG_PARSED_TEXT_OPTION:
+			CharSequence[] options = { urlLink };
+			AlertDialog.Builder secondBuilder = new AlertDialog.Builder(this);
+			secondBuilder
+					.setTitle("Option Menu")
+					.setCancelable(true)
+					.setItems(options,
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+										int id) {
+									if (0 == id) {
+									    Intent webIntent = new Intent(Intent.ACTION_VIEW);
+									    webIntent.setData(Uri.parse(urlLink.toString()));
+									    startActivity(webIntent);
+									}
+								}
+							});
+			return secondBuilder.create();
+
+			// case DIALOG_GALLERY_OPTION:
+			// CharSequence[] galleryOption = { "View in Gallery" };
+			// AlertDialog.Builder secondBuilder = new
+			// AlertDialog.Builder(this);
+			// secondBuilder
+			// .setTitle("Option Menu")
+			// .setCancelable(true)
+			// .setItems(galleryOption,
+			// new DialogInterface.OnClickListener() {
+			// @Override
+			// public void onClick(DialogInterface dialog,
+			// int id) {
+			// if (0 == id) {
+			// startGallery();
+			// }
+			// }
+			// });
+			// return secondBuilder.create();
+
 		default:
 			dialog = null;
 			break;
 		}
 		return dialog;
 	}
-
-	private void loadAnimations() {
-		rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_indefinately);
-	}
-
-	@Override
-	protected void onStart() {
-		super.onStart();
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-	}
-
-	@Override
-	protected void onStop() {
-		super.onStop();
-	}
+	
+	// private void startGallery() {
+	// Toast.makeText(CommentThreadActivity.this,
+	// "You have selected big picture", Toast.LENGTH_SHORT).show();
+	// }
 
 	@Override
 	public Object onRetainNonConfigurationInstance() {
 		// return super.onRetainNonConfigurationInstance();
 		return ((EditText) findViewById(R.id.inputbox)).getText().toString();
+	}
+
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		if (urlLink != null)
+			outState.putString("SAVE_URL_LINK", urlLink.toString());
+	}
+
+	@Override
+	protected void onRestoreInstanceState(Bundle state) {
+		super.onRestoreInstanceState(state);
+		urlLink = state.getString("SAVE_URL_LINK");
 	}
 
 	@Override
@@ -156,11 +205,38 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_refresh:
-			commentsRefreshPosts();
+			refreshThread();
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+
+	public void onListItemClick(View v) {
+		String comment = ((TextView) v.findViewById(R.id.comment)).getText()
+				.toString();
+		
+		// Uses it's default field separator, and assumes that fields within the
+		// string are separated by whitespace characters (spaces, tabs, and
+		// carriage-return characters).
+		StringTokenizer stringTokenizer = new StringTokenizer(comment);
+		//CharSequence[] parseOptions = new CharSequence[stringTokenizer.countTokens()];
+		String stringToken;
+		int index = 0;
+		while (stringTokenizer.hasMoreTokens()) {
+			stringToken = stringTokenizer.nextToken();
+			if (stringToken.matches("(https?|ftp):\\//" + "[^\\.s]*[\\.][^\\s]*")) {
+				//parseOptions[index] = stringToken.trim();
+				urlLink = stringToken.trim();
+				break;
+			}
+			index++;
+		}
+		showDialog(DIALOG_PARSED_TEXT_OPTION);
+		// String[] parsedComment = comment.split("(https?|ftp)://"
+		// + "[^.s]*[.][^s]*");
+		// CharSequence charSeq = parsedComment[0];
+		// Toast.makeText(this, charSeq, Toast.LENGTH_SHORT).show();
 	}
 
 	private void addImageAsHeader() {
@@ -197,7 +273,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		getListView().addHeaderView(imageItem);
 	}
 
-	private synchronized void populateList() {
+	private synchronized KT_SimpleCursorAdapter initializeListAdapter() {
 
 		dbAdapter.open();
 		Cursor cur = dbAdapter.fetchComments(itemId);
@@ -216,6 +292,15 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 		setListAdapter(adapter);
 
+		dbAdapter.close();
+
+		return adapter;
+	}
+
+	private void updateAdapter() {
+		dbAdapter.open();
+		Cursor cur = dbAdapter.fetchComments(itemId);
+		cursorAdapter.changeCursor(cur);
 		dbAdapter.close();
 	}
 
@@ -264,7 +349,9 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 					@Override
 					public void onClick(View v) {
 						if (v.getId() == R.id.clear_comment_button) {
-							showDialog(DIALOG_CLEAR_COMMENT_FIELD);
+							if (((EditText) findViewById(R.id.inputbox))
+									.getText().length() > 0)
+								showDialog(DIALOG_CLEAR_COMMENT_FIELD);
 						}
 					}
 				});
@@ -276,8 +363,10 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 					@Override
 					public boolean onLongClick(View v) {
 						if (v.getId() == R.id.clear_comment_button) {
-							((EditText) findViewById(R.id.inputbox))
-									.setText("");
+							if (((EditText) findViewById(R.id.inputbox))
+									.getText().length() > 0)
+								((EditText) findViewById(R.id.inputbox))
+										.setText("");
 							return true;
 						} else
 							return false;
@@ -290,10 +379,10 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	 * 
 	 * @param sucessful
 	 */
-	public void commentPosted(boolean sucessful) {
+	public void commentPosted(boolean successful) {
 		((EditText) findViewById(R.id.inputbox)).setText("");
 		((EditText) findViewById(R.id.inputbox)).clearFocus();
-		commentsRefreshPosts();
+		refreshThread();
 
 		/*
 		 * Must be placed here in order it to properly clear focus and then let
@@ -306,17 +395,17 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 				((EditText) findViewById(R.id.inputbox)).getWindowToken(),
 				InputMethodManager.HIDE_NOT_ALWAYS);
 
-		if (sucessful)
+		if (successful)
 			Toast.makeText(this, "Comment posted", Toast.LENGTH_LONG).show();
 		else
 			Toast.makeText(this, "Failed to post comment", Toast.LENGTH_LONG)
 					.show();
 	}
 
-	public void commentsRefreshPosts() {
+	public void refreshThread() {
 
-		if (!refreshingPosts) {
-			refreshingPosts = true;
+		if (!sharedPrefs.getBoolean(KEY_REFRESHING_POSTS, false)) {
+			sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, true).commit();
 			findViewById(R.id.refresh_button).setVisibility(View.VISIBLE);
 			findViewById(R.id.refresh_button).startAnimation(rotate);
 
@@ -335,6 +424,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 						dbAdapters[0].open();
 
+						dbAdapters[0].insertPost(feedItem.post);
 						dbAdapters[0].insertComments(feedItem.comments);
 
 						dbAdapters[0].close();
@@ -351,15 +441,17 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 				@Override
 				protected void onPostExecute(Boolean successful) {
+					sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, false)
+							.commit();
 					findViewById(R.id.refresh_button).clearAnimation();
 					findViewById(R.id.refresh_button).setVisibility(
 							View.INVISIBLE);
 					if (successful) {
-						populateList();
+						updateAdapter();
 					} else
 						Toast.makeText(CommentThreadActivity.this,
 								"Refresh failed", Toast.LENGTH_SHORT).show();
-					refreshingPosts = false;
+
 					cancel(true);
 				}
 			}.execute(dbAdapter);

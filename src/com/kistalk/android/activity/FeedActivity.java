@@ -48,7 +48,6 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	// public directories for cache and files
 	public static File cacheDir;
-	public static File filesDir;
 	public static File publicFilesDir;
 
 	private static String username;
@@ -72,8 +71,11 @@ public class FeedActivity extends ListActivity implements Constant {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		initializeVariables();
-		startUpCheck();
+		dbAdapter = new DbAdapter(this);
+		imageController = new ImageController();
+		cacheDir = getCacheDir();
+		if (!cacheDir.exists() && !cacheDir.mkdirs())
+			Log.e(LOG_TAG, "Can't access cacheDir");
 
 		// UI setup start
 		setContentView(R.layout.feed_view_layout);
@@ -86,7 +88,7 @@ public class FeedActivity extends ListActivity implements Constant {
 
 		restoreImageCache(savedInstanceState);
 
-		sharedPrefs = getSharedPreferences(LOGIN_SHARED_PREF_FILE, MODE_PRIVATE);
+		sharedPrefs = getSharedPreferences(SHARED_PREF_FILE, MODE_PRIVATE);
 
 		username = sharedPrefs.getString(ARG_USERNAME, null);
 		token = sharedPrefs.getString(ARG_TOKEN, null);
@@ -127,35 +129,14 @@ public class FeedActivity extends ListActivity implements Constant {
 	}
 
 	@Override
-	protected void onStart() {
-		super.onStart();
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-	}
-
-	@Override
-	protected void onStop() {
-		super.onStop();
-
-	}
-
-	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		imageController.killExecutor();
 		if (isFinishing()) {
-			imageController.clearCache();
-			if (tempFile != null && tempFile.exists())
-				tempFile.delete();
+			for (File cacheFile : cacheDir.listFiles())
+				cacheFile.delete();
 		}
+
 	}
 
 	private synchronized KT_SimpleCursorAdapter initializeListAdapter() {
@@ -230,36 +211,12 @@ public class FeedActivity extends ListActivity implements Constant {
 		sharedPrefs.edit().remove(ARG_USERNAME).remove(ARG_TOKEN).commit();
 		imageController.clearCache();
 		startLoginActivityForResult();
-
-	}
-
-	/*
-	 * Initializes variables for this activity but also public variables
-	 * available for other classes
-	 */
-	private void initializeVariables() {
-		cacheDir = getCacheDir();
-		filesDir = getFilesDir();
-
-		dbAdapter = new DbAdapter(this);
-		imageController = new ImageController();
 	}
 
 	/*
 	 * Method that checks environment and variables that's necessary for the
 	 * application to run
 	 */
-	private void startUpCheck() {
-		/*
-		 * Checks whether directories exists or not and if they can be accessed
-		 */
-		if (!cacheDir.mkdirs())
-			if (!cacheDir.exists())
-				Log.e(LOG_TAG, "Can't access cacheDir");
-		if (!filesDir.mkdirs())
-			if (!filesDir.exists())
-				Log.e(LOG_TAG, "Can't access filesDir");
-	}
 
 	/*
 	 * help method thats shows a dialog window for debugging and testing
@@ -392,7 +349,8 @@ public class FeedActivity extends ListActivity implements Constant {
 		commentIntent.setAction(Intent.ACTION_VIEW);
 		commentIntent.putExtra(KEY_ITEM_ID, itemId);
 		try {
-			FeedActivity.this.startActivity(commentIntent);
+			FeedActivity.this.startActivityForResult(commentIntent,
+					REQUEST_THREAD_VIEW);
 		} catch (Exception e) {
 			Log.e(LOG_TAG, e.toString());
 		}
@@ -522,10 +480,14 @@ public class FeedActivity extends ListActivity implements Constant {
 
 		case UPLOAD_REQUEST:
 			if (resultCode == RESULT_OK) {
-				Toast.makeText(this, "Upload sucessful", Toast.LENGTH_LONG)
+				Toast.makeText(this, "Upload successful", Toast.LENGTH_LONG)
 						.show();
 				refreshLatestPosts();
 			}
+			break;
+
+		case REQUEST_THREAD_VIEW:
+			updateAdapter();
 			break;
 
 		default:
