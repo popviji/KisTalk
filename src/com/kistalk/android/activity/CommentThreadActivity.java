@@ -15,6 +15,7 @@ import com.kistalk.android.util.DbAdapter;
 import com.kistalk.android.util.KT_XMLParser;
 import com.kistalk.android.util.UploadTask;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -35,8 +36,12 @@ import android.view.View.OnLongClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -65,6 +70,8 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		addCommentForm();
 		((EditText) findViewById(R.id.inputbox))
 				.setText((String) getLastNonConfigurationInstance());
+		
+		
 	}
 
 	@Override

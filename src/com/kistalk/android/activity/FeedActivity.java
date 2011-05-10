@@ -31,10 +31,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -503,6 +500,8 @@ public class FeedActivity extends ListActivity implements Constant {
 		case REQUEST_GET_CAMERA_PIC:
 			if (resultCode == RESULT_OK) {
 				showUploadView(tempFile.toString());
+			} else if (resultCode == RESULT_CANCELED) {
+
 			} else
 				Toast.makeText(this, ERROR_MSG_EXT_APPLICATION,
 						Toast.LENGTH_LONG).show();
@@ -514,6 +513,8 @@ public class FeedActivity extends ListActivity implements Constant {
 					String realPath = getPathFromContentUri(recievedUri);
 					showUploadView(realPath);
 				}
+			} else if (resultCode == RESULT_CANCELED) {
+
 			} else
 				Toast.makeText(this, ERROR_MSG_EXT_APPLICATION,
 						Toast.LENGTH_LONG).show();
