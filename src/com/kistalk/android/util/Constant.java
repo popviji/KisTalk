@@ -61,6 +61,12 @@ public interface Constant {
 	public static final String KEY_IMAGE_CACHE_HASHMAP = "KEY_IMAGE_CACHE_HASHMAP";
 	public static final String KEY_LAST_PAGE = "KEY_LAST_PAGE";
 
+	public static final String KEY_SCROLL_POSITION = "KEY_SCROLL_POSITION";
+	public static final String KEY_COMMENT_INPUT_TEXT = "KEY_COMMENT_INPUT_TEXT";
+	public static final String KEY_COMMENT_INPUT_SELECTED = "KEY_COMMENT_INPUT_FOCUS";
+	public static final String KEY_UPLOAD_INPUT_TEXT = "KEY_UPLOAD_INPUT_TEXT";
+	
+
 	// public static final String KEY_DB_ADAPTER = "KEY_DB_ADAPTER";
 
 	// Constants for webserver and more

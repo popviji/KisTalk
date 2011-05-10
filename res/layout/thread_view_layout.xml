@@ -4,7 +4,5 @@
 	android:orientation="vertical" android:id="@+id/thread_view">
 
 	<include android:id="@+id/header" layout="@layout/header_layout" />
-
-	<ListView android:layout_width="fill_parent" android:id="@+android:id/list"
-		android:layout_height="fill_parent" style="@style/ListViewSyle" android:descendantFocusability="afterDescendants"></ListView>
+	<ListView style="@style/ListViewSyle" android:descendantFocusability="afterDescendants" android:layout_width="fill_parent" android:layout_height="fill_parent" android:id="@+android:id/list"></ListView>
 </LinearLayout>

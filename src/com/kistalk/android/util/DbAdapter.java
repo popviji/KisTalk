@@ -18,7 +18,7 @@ public class DbAdapter implements Constant {
 	private static final String DB_NAME = "kistalk_db";
 	private static final String DB_TABLE_POSTS = "posts";
 	private static final String DB_TABLE_COMMENTS = "comments";
-	private static final int DATABASE_VERSION = 16;
+	private static final int DATABASE_VERSION = 17;
 
 	private static final String DB_CREATE_TABLE_POSTS = "create table "
 			+ DB_TABLE_POSTS + " (" + KEY_ROWID
@@ -43,8 +43,6 @@ public class DbAdapter implements Constant {
 	private DatabaseHelper mDbHelper;
 	private SQLiteDatabase mDb;
 	private Context mCtx;
-
-	private Semaphore semMDB = new Semaphore(1);
 
 	/*
 	 * Private static class DatabaseHelper which manages creation and upgrading
@@ -82,116 +80,142 @@ public class DbAdapter implements Constant {
 	}
 
 	public DbAdapter open() throws SQLException {
-		lockAndGetDBPointer();
 		mDbHelper = new DatabaseHelper(mCtx);
 		mDb = mDbHelper.getWritableDatabase();
-		unlockDBPointer();
-
 		return this;
 	}
 
 	public void close() {
-		lockAndGetDBPointer();
 		mDbHelper.close();
-		unlockDBPointer();
 	}
 
 	public void insertComments(LinkedList<ContentValues> comments) {
-		SQLiteDatabase sqDB = lockAndGetDBPointer();
-		for (ContentValues comment : comments) {
-			if (sqDB.query(DB_TABLE_COMMENTS, null,
-					KEY_COM_ID + "=" + comment.getAsInteger(KEY_COM_ID), null,
-					null, null, null).getCount() == 0)
-				if (sqDB.insert(DB_TABLE_COMMENTS, null, comment) == -1)
-					Log.e(LOG_TAG, "Error while inserting post to db");
+		mDb.beginTransaction();
+		try {
+			for (ContentValues comment : comments) {
+				if (mDb.query(DB_TABLE_COMMENTS, null,
+						KEY_COM_ID + "=" + comment.getAsInteger(KEY_COM_ID),
+						null, null, null, null).getCount() == 0)
+					if (mDb.insert(DB_TABLE_COMMENTS, null, comment) == -1)
+						Log.e(LOG_TAG, "Error while inserting post to db");
+			}
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
 		}
-		unlockDBPointer();
 	}
 
 	public void insertPost(ContentValues post) {
-		SQLiteDatabase sqDB = lockAndGetDBPointer();
 
-		if (sqDB.query(DB_TABLE_POSTS, null,
-				KEY_ITEM_ID + "=" + post.getAsInteger(KEY_ITEM_ID), null, null,
-				null, null).getCount() == 1)
-			sqDB.update(DB_TABLE_POSTS, post,
-					KEY_ITEM_ID + "=" + post.getAsInteger(KEY_ITEM_ID), null);
-		else
-			sqDB.insert(DB_TABLE_POSTS, null, post);
+		mDb.beginTransaction();
+		try {
+			if (mDb.query(DB_TABLE_POSTS, null,
+					KEY_ITEM_ID + "=" + post.getAsInteger(KEY_ITEM_ID), null,
+					null, null, null).getCount() == 1)
+				mDb.update(DB_TABLE_POSTS, post,
+						KEY_ITEM_ID + "=" + post.getAsInteger(KEY_ITEM_ID),
+						null);
+			else
+				mDb.insert(DB_TABLE_POSTS, null, post);
 
-		// if (sqDB.insert(DB_TABLE_POSTS, null, post) == -1)
-		// Log.e(LOG_TAG, "Error while inserting post to db");
-		unlockDBPointer();
-	}
-
-	public boolean deleteNote(long rowId) {
-		SQLiteDatabase sqDB = lockAndGetDBPointer();
-
-		if (sqDB.delete(DB_TABLE_POSTS, KEY_ROWID + "=" + rowId, null) > 0) {
-			unlockDBPointer();
-			return true;
-		} else {
-			unlockDBPointer();
-			return false;
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
 		}
 	}
 
+	public boolean deleteNote(long rowId) {
+		boolean successfull;
+		mDb.beginTransaction();
+		try {
+			successfull = (mDb.delete(DB_TABLE_POSTS, KEY_ROWID + "=" + rowId,
+					null) != 0);
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
+		return successfull;
+	}
+
 	public void deleteAll() {
-		SQLiteDatabase sqDB = lockAndGetDBPointer();
-
-		sqDB.delete(DB_TABLE_POSTS, null, null);
-		sqDB.delete(DB_TABLE_COMMENTS, null, null);
-
-		unlockDBPointer();
+		mDb.beginTransaction();
+		try {
+			mDb.delete(DB_TABLE_POSTS, null, null);
+			mDb.delete(DB_TABLE_COMMENTS, null, null);
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
 	}
 
 	public Cursor fetchAllPosts() {
-		Cursor cur = lockAndGetDBPointer().query(DB_TABLE_POSTS, null, null,
-				null, null, null, null);
-		unlockDBPointer();
+		mDb.beginTransaction();
+		Cursor cur;
+		try {
+			cur = mDb.query(DB_TABLE_POSTS, null, null, null, null, null, KEY_ITEM_ID + " DESC");
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
+		return cur;
+	}
+
+	public Cursor fetchPosts(int numOfPosts) {
+		mDb.beginTransaction();
+		Cursor cur;
+		try {
+			cur = mDb.query(DB_TABLE_POSTS, null, null, null, null, null, KEY_ITEM_ID + " DESC",
+					String.valueOf(numOfPosts));
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
 		return cur;
 	}
 
 	public Cursor fetchComments(int itemId) {
-		Cursor cur = lockAndGetDBPointer().query(DB_TABLE_COMMENTS, null,
-				KEY_ITEM_ID + "=" + itemId, null, null, null, null);
-		unlockDBPointer();
+		mDb.beginTransaction();
+		Cursor cur;
+		try {
+			cur = mDb.query(DB_TABLE_COMMENTS, null,
+					KEY_ITEM_ID + "=" + itemId, null, null, null, KEY_COM_ID + " ASC");
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
 		return cur;
 	}
 
 	public Cursor fetchPost(long rowId) throws SQLException {
-
-		Cursor mCursor = lockAndGetDBPointer().query(true, DB_TABLE_POSTS,
-				null, KEY_ROWID + "=" + rowId, null, null, null, null, null);
-		if (mCursor != null) {
-			mCursor.moveToFirst();
+		mDb.beginTransaction();
+		Cursor mCursor;
+		try {
+			mCursor = mDb.query(true, DB_TABLE_POSTS, null, KEY_ROWID + "="
+					+ rowId, null, null, null, null, null);
+			if (mCursor != null) {
+				mCursor.moveToFirst();
+			}
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
 		}
-		unlockDBPointer();
 		return mCursor;
 	}
 
 	public Cursor fetchPostFromId(long itemId) throws SQLException {
-
-		Cursor mCursor = lockAndGetDBPointer().query(true, DB_TABLE_POSTS,
-				null, KEY_ITEM_ID + "=" + itemId, null, null, null, null, null);
-		if (mCursor != null) {
-			mCursor.moveToFirst();
-		}
-		unlockDBPointer();
-		return mCursor;
-	}
-
-	private synchronized SQLiteDatabase lockAndGetDBPointer() {
+		mDb.beginTransaction();
+		Cursor mCursor;
 		try {
-			semMDB.acquire();
-		} catch (InterruptedException e) {
-			Log.e(LOG_TAG, "The acquire of semaphore was interrupted!");
-			e.printStackTrace();
-		}
-		return mDb;
-	}
 
-	private void unlockDBPointer() {
-		semMDB.release();
+			mCursor = mDb.query(true, DB_TABLE_POSTS, null, KEY_ITEM_ID + "="
+					+ itemId, null, null, null, null, null);
+			if (mCursor != null) {
+				mCursor.moveToFirst();
+			}
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
+		return mCursor;
 	}
 }

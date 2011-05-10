@@ -21,6 +21,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.MediaStore.MediaColumns;
 import android.util.Log;
@@ -31,10 +32,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -73,41 +71,40 @@ public class FeedActivity extends ListActivity implements Constant {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
 		dbAdapter = new DbAdapter(this);
 		imageController = new ImageController();
+		tempFile = new File(Environment.getExternalStorageDirectory(),
+				"Kistalk-TEMP-Upload_file.jpg");
 		cacheDir = getCacheDir();
 		if (!cacheDir.exists() && !cacheDir.mkdirs())
 			Log.e(LOG_TAG, "Can't access cacheDir");
+		rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_indefinately);
+		sharedPrefs = getSharedPreferences(SHARED_PREF_FILE, MODE_PRIVATE);
+		username = sharedPrefs.getString(ARG_USERNAME, null);
+		token = sharedPrefs.getString(ARG_TOKEN, null);
+
+		restoreImageCache(savedInstanceState);
 
 		// UI setup start
 		setContentView(R.layout.feed_view_layout);
+		// getListView().setItemsCanFocus(true);
 		moreImagesButton = (Button) getLayoutInflater().inflate(
 				R.layout.more_images_button, null);
 		getListView().addFooterView(moreImagesButton);
 		setOnClickListeners();
-		loadAnimations();
-		// UI setup end
 
-		restoreImageCache(savedInstanceState);
+		cursorAdapter = (KT_SimpleCursorAdapter) getLastNonConfigurationInstance();
+		if (cursorAdapter == null)
+			cursorAdapter = initializeListAdapter();
+		setListAdapter(cursorAdapter);
 
-		sharedPrefs = getSharedPreferences(SHARED_PREF_FILE, MODE_PRIVATE);
-
-		username = sharedPrefs.getString(ARG_USERNAME, null);
-		token = sharedPrefs.getString(ARG_TOKEN, null);
-
-		// If program starts (and not restarts due to orientation changes)
+		// If activity starts (and not restarts due to orientation changes)
 		if (savedInstanceState == null) {
 			validateCredentials();
 			sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, false)
 					.putInt(KEY_LAST_PAGE, 1).commit();
 			refreshLatestPosts();
 		}
-		cursorAdapter = initializeListAdapter();
-	}
-
-	private void loadAnimations() {
-		rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_indefinately);
 	}
 
 	private void validateCredentials() {
@@ -138,6 +135,7 @@ public class FeedActivity extends ListActivity implements Constant {
 		if (isFinishing()) {
 			for (File cacheFile : cacheDir.listFiles())
 				cacheFile.delete();
+			tempFile.delete();
 		}
 
 	}
@@ -152,17 +150,12 @@ public class FeedActivity extends ListActivity implements Constant {
 		Drawable imageSmallPlaceholder = res
 				.getDrawable(R.drawable.placeholder_image_small);
 
-		KT_SimpleCursorAdapter adapter = new KT_SimpleCursorAdapter(this,
-
-		R.layout.feed_item_layout, cur, FEEDACTIVITY_DISPLAY_FIELDS,
+		cursorAdapter = new KT_SimpleCursorAdapter(this,
+				R.layout.feed_item_layout, cur, FEEDACTIVITY_DISPLAY_FIELDS,
 				FEEDACTIVITY_DISPLAY_VIEWS, avatarPlaceholder,
 				imageSmallPlaceholder, null);
 
-		setListAdapter(adapter);
-
-		dbAdapter.close();
-
-		return adapter;
+		return cursorAdapter;
 
 	}
 
@@ -175,14 +168,14 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
 		outState.putSerializable(KEY_IMAGE_CACHE_HASHMAP,
 				imageController.getCacheHashMap());
 	}
 
 	@Override
-	protected void onRestoreInstanceState(Bundle state) {
-		// TODO Auto-generated method stub
-		super.onRestoreInstanceState(state);
+	public Object onRetainNonConfigurationInstance() {
+		return cursorAdapter;
 	}
 
 	/* Creates a user menu */
@@ -247,17 +240,6 @@ public class FeedActivity extends ListActivity implements Constant {
 						showDialog(DIALOG_CHOOSE_OPTION);
 					}
 				});
-
-		/*
-		 * Button that loads more images
-		 */
-		moreImagesButton.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View v) {
-				downloadMoreImages();
-			}
-		});
 	}
 
 	public void onListItemClick(View v) {
@@ -266,7 +248,8 @@ public class FeedActivity extends ListActivity implements Constant {
 		showComments(itemId);
 	}
 
-	protected void downloadMoreImages() {
+	// test with protected void ()
+	public void downloadMoreImages(View v) {
 		int lastPage = sharedPrefs.getInt(KEY_LAST_PAGE, 1);
 		getPosts(lastPage + 1, FETCH_NO_COMMENTS);
 		sharedPrefs.edit().putInt(KEY_LAST_PAGE, lastPage + 1).commit();
@@ -319,9 +302,9 @@ public class FeedActivity extends ListActivity implements Constant {
 		return dialog;
 	}
 
-	private void updateAdapter() {
+	private void updateAdapter(int numOfPosts) {
 		dbAdapter.open();
-		Cursor cur = dbAdapter.fetchAllPosts();
+		Cursor cur = dbAdapter.fetchPosts(numOfPosts);
 		cursorAdapter.changeCursor(cur);
 		dbAdapter.close();
 	}
@@ -334,14 +317,6 @@ public class FeedActivity extends ListActivity implements Constant {
 
 	private void takePhotoAction() {
 		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-		if (tempFile != null && tempFile.exists())
-			tempFile.delete();
-		try {
-			tempFile = File.createTempFile("image", ".jpg");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
 		intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(tempFile));
 		startActivityForResult(intent, REQUEST_GET_CAMERA_PIC);
 
@@ -373,11 +348,8 @@ public class FeedActivity extends ListActivity implements Constant {
 	}
 
 	private synchronized void refreshLatestPosts() {
-		dbAdapter.open();
-		dbAdapter.deleteAll();
-		dbAdapter.close();
 		getPosts(1, FETCH_COMMENTS);
-		sharedPrefs.edit().putInt(KEY_LAST_PAGE, 1);
+		sharedPrefs.edit().putInt(KEY_LAST_PAGE, 1).commit();
 
 	};
 
@@ -428,7 +400,7 @@ public class FeedActivity extends ListActivity implements Constant {
 					findViewById(R.id.refresh_button).setVisibility(
 							View.INVISIBLE);
 					if (successful) {
-						updateAdapter();
+						updateAdapter(page * POSTS_PER_PAGE);
 					} else
 						Toast.makeText(FeedActivity.this, "Refresh failed",
 								Toast.LENGTH_SHORT).show();
@@ -485,7 +457,7 @@ public class FeedActivity extends ListActivity implements Constant {
 			break;
 
 		case REQUEST_THREAD_VIEW:
-			updateAdapter();
+			updateAdapter(sharedPrefs.getInt(KEY_LAST_PAGE, 1) * POSTS_PER_PAGE);
 			break;
 
 		default:

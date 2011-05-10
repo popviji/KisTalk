@@ -21,4 +21,5 @@
 	<string name="login_button_login">Login</string>
 	<string name="login_description_optional">If you don\'t have a QR reader installed you can write username and token manually</string>
 	<string name="load_more_images">Load more images</string>
+	<string name="upload">Upload</string>
 </resources>

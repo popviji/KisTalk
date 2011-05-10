@@ -1,6 +1,13 @@
 package com.kistalk.android.activity;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URISyntaxException;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -18,12 +25,15 @@ import com.kistalk.android.util.UploadTask;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -33,6 +43,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
@@ -49,6 +60,8 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	private SharedPreferences sharedPrefs;
 	private KT_SimpleCursorAdapter cursorAdapter;
 	private Animation rotate;
+	private EditText inputbox;
+	private String urlToBigImage;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -64,15 +77,23 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		addImageAsHeader();
 		addCommentForm();
 
-		cursorAdapter = initializeListAdapter();
+		cursorAdapter = (KT_SimpleCursorAdapter) getLastNonConfigurationInstance();
+		if (cursorAdapter == null)
+			cursorAdapter = initializeListAdapter();
+		setListAdapter(cursorAdapter);
 
+		// If activity starts (and not restarts due to orientation changes)
 		if (savedInstanceState == null) {
 			sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
 			refreshThread();
-		} else
-			((EditText) findViewById(R.id.inputbox))
-					.setText((String) getLastNonConfigurationInstance());
+		}
 
+	}
+
+	@Override
+	protected void onRestoreInstanceState(Bundle state) {
+		super.onRestoreInstanceState(state);
+		inputbox.setText(state.getString(KEY_COMMENT_INPUT_TEXT));
 	}
 
 	@Override
@@ -110,9 +131,15 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	}
 
 	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putString(KEY_COMMENT_INPUT_TEXT, inputbox.getText()
+				.toString());
+	}
+
+	@Override
 	public Object onRetainNonConfigurationInstance() {
-		// return super.onRetainNonConfigurationInstance();
-		return ((EditText) findViewById(R.id.inputbox)).getText().toString();
+		return cursorAdapter;
 	}
 
 	@Override
@@ -157,7 +184,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		Cursor cur = dbAdapter.fetchPostFromId(itemId);
 
 		// Extract fields from cursor
-		String imageUrl = cur.getString(cur.getColumnIndex(KEY_ITEM_URL_BIG));
+		urlToBigImage = cur.getString(cur.getColumnIndex(KEY_ITEM_URL_BIG));
 		String userName = cur.getString(cur.getColumnIndex(KEY_ITEM_USER_NAME));
 		String avatarUrl = cur.getString(cur
 				.getColumnIndex(KEY_ITEM_USER_AVATAR));
@@ -168,7 +195,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		dbAdapter.close();
 
 		// Set views
-		imageController.start(imageUrl,
+		imageController.start(urlToBigImage,
 				(ImageView) imageItem.findViewById(R.id.image_big));
 		imageController.start(avatarUrl,
 				(ImageView) imageItem.findViewById(R.id.avatar));
@@ -192,17 +219,15 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		Drawable imageBigPlaceholder = res
 				.getDrawable(R.drawable.placeholder_image_big);
 
-		KT_SimpleCursorAdapter adapter = new KT_SimpleCursorAdapter(this,
+		cursorAdapter = new KT_SimpleCursorAdapter(this,
 				R.layout.comment_item_layout, cur,
 				COMTHREAD_ACTIVITY_DISPLAY_FIELDS,
 				COMTHREAD_ACTIVITY_DISPLAY_VIEWS, avatarPlaceholder, null,
 				imageBigPlaceholder);
 
-		setListAdapter(adapter);
-
 		dbAdapter.close();
 
-		return adapter;
+		return cursorAdapter;
 	}
 
 	private void updateAdapter() {
@@ -220,6 +245,8 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 		getListView().addFooterView(commentForm);
 
+		inputbox = (EditText) findViewById(R.id.inputbox);
+
 		commentForm.findViewById(R.id.comment_button).setOnClickListener(
 				new OnClickListener() {
 
@@ -228,8 +255,8 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 						if (v.getId() == R.id.comment_button) {
 
-							String comment = ((EditText) findViewById(R.id.inputbox))
-									.getText().toString().trim();
+							String comment = inputbox.getText().toString()
+									.trim();
 							if (comment.length() < 3)
 								Toast.makeText(CommentThreadActivity.this,
 										"Comment too short", Toast.LENGTH_LONG)
@@ -269,8 +296,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 					@Override
 					public boolean onLongClick(View v) {
 						if (v.getId() == R.id.clear_comment_button) {
-							((EditText) findViewById(R.id.inputbox))
-									.setText("");
+							inputbox.setText("");
 							return true;
 						} else
 							return false;
@@ -284,8 +310,8 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	 * @param sucessful
 	 */
 	public void commentPosted(boolean successful) {
-		((EditText) findViewById(R.id.inputbox)).setText("");
-		((EditText) findViewById(R.id.inputbox)).clearFocus();
+		inputbox.setText("");
+		inputbox.clearFocus();
 		refreshThread();
 
 		/*
@@ -295,15 +321,18 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		// Access the soft keyboard
 		InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 		// Hide soft keyboard hidden unless the user has selected the text field
-		inputMethodManager.hideSoftInputFromWindow(
-				((EditText) findViewById(R.id.inputbox)).getWindowToken(),
+		inputMethodManager.hideSoftInputFromWindow(inputbox.getWindowToken(),
 				InputMethodManager.HIDE_NOT_ALWAYS);
 
 		if (successful)
-			Toast.makeText(this, "Comment posted", Toast.LENGTH_LONG).show();
+			Toast.makeText(this, "Comment posted", Toast.LENGTH_SHORT).show();
 		else
 			Toast.makeText(this, "Failed to post comment", Toast.LENGTH_LONG)
 					.show();
+	}
+
+	public void showInFullScreen(View v) {
+
 	}
 
 	public void refreshThread() {

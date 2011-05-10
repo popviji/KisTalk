@@ -13,9 +13,9 @@
 			android:paddingBottom="10dip" />
 		<EditText android:id="@+id/inputbox" android:layout_width="fill_parent"
 			android:layout_height="wrap_content" android:background="@android:drawable/editbox_background"
-			android:layout_below="@id/label" android:focusable="true"/>
+			android:layout_below="@id/label" android:focusable="true" android:nextFocusDown="@+id/comment_button"/>
 		<FrameLayout android:layout_width="wrap_content" android:layout_below="@+id/inputbox" android:layout_alignLeft="@+id/inputbox" android:layout_alignRight="@+id/inputbox" android:layout_height="5dip" android:id="@+id/spacer"></FrameLayout>
-		<ImageView android:layout_width="wrap_content" android:background="@drawable/clear_button_shape" android:id="@+id/clear_comment_button" android:layout_height="wrap_content" android:src="@drawable/ic_menu_end_conversation" android:layout_below="@+id/spacer" android:layout_alignLeft="@+id/spacer" android:focusable="true"></ImageView>
-		<Button android:capitalize="sentences" android:background="@drawable/submit_button_shape" android:layout_width="wrap_content" android:id="@+id/comment_button" android:text="@string/comment" style="@style/SubmitButtonStyle" android:paddingTop="10dip" android:layout_height="wrap_content" android:layout_below="@+id/spacer" android:layout_alignRight="@+id/spacer" android:focusable="true"></Button>
+		<ImageView android:layout_width="wrap_content" android:background="@drawable/clear_button_shape" android:id="@+id/clear_comment_button" android:layout_height="wrap_content" android:src="@drawable/ic_menu_end_conversation" android:layout_below="@+id/spacer" android:layout_alignLeft="@+id/spacer" android:focusable="true" android:nextFocusRight="@+id/comment_button" android:nextFocusUp="@+id/inputbox"></ImageView>
+		<Button android:capitalize="sentences" android:background="@drawable/submit_button_shape" android:layout_width="wrap_content" android:id="@+id/comment_button" android:text="@string/comment" style="@style/SubmitButtonStyle" android:paddingTop="10dip" android:layout_height="wrap_content" android:layout_below="@+id/spacer" android:layout_alignRight="@+id/spacer" android:focusable="true" android:nextFocusLeft="@+id/clear_comment_button" android:nextFocusUp="@+id/inputbox" android:longClickable="false"></Button>
 	</RelativeLayout>
 </LinearLayout>

@@ -1,11 +1,13 @@
 package com.kistalk.android.image_management;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import com.kistalk.android.util.Constant;
 
+import android.net.Uri;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -95,5 +97,13 @@ public class ImageController implements Constant {
 
 	public void killExecutor() {
 		executor.shutdown();
+	}
+
+	public File getImageFile(String urlToBigImage) {
+		String pathToImage = imageCache.getPath(urlToBigImage);
+		if (pathToImage != null)
+			return new File(pathToImage);
+		else
+			return null;
 	}
 }

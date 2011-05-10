@@ -90,8 +90,15 @@ public class UploadActivity extends Activity implements Constant,
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
 		outState.putString(KEY_CURRENT_IMAGE, currentImagePath);
 	}
+	
+//	@Override
+//	public Object onRetainNonConfigurationInstance() {
+//		// return super.onRetainNonConfigurationInstance();
+//		return ((EditText) findViewById(R.id.inputbox)).getText().toString();
+//	}
 
 	private void startProcedure() {
 		final String pathImage = currentImagePath;
