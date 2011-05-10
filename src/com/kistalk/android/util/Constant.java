@@ -8,7 +8,7 @@ public interface Constant {
 
 	public static final int POSTS_PER_PAGE = 15;
 
-	public static final String LOGIN_SHARED_PREF_FILE = "LOGIN_SHARED_PREF_FILE";
+	public static final String SHARED_PREF_FILE = "LOGIN_SHARED_PREF_FILE";
 	/*
 	 * Intent constants
 	 */
@@ -17,7 +17,7 @@ public interface Constant {
 	public static final int LOGIN_REQUEST = 1339;
 	public static final int REQUEST_QR_READER = 1340;
 	public static final int REQUEST_THREAD_VIEW = 1341;
-	
+
 	public static final String KEY_REFRESH_REQUEST = "REFRESH_REQUEST";
 	public static final int UPLOAD_REQUEST = 77;
 
@@ -118,7 +118,8 @@ public interface Constant {
 
 	public static final String[] FEEDACTIVITY_DISPLAY_FIELDS = {
 			KEY_ITEM_USER_NAME, KEY_ITEM_USER_AVATAR, KEY_ITEM_URL_SMALL,
-			KEY_ITEM_DESCRIPTION, KEY_ITEM_DATE, KEY_ITEM_NUM_OF_COMS, KEY_ITEM_ID };
+			KEY_ITEM_DESCRIPTION, KEY_ITEM_DATE, KEY_ITEM_NUM_OF_COMS,
+			KEY_ITEM_ID };
 
 	public static final int[] FEEDACTIVITY_DISPLAY_VIEWS = { R.id.user_name,
 			R.id.avatar, R.id.image_small, R.id.description, R.id.date,
@@ -126,10 +127,10 @@ public interface Constant {
 
 	public static final String[] COMTHREAD_ACTIVITY_DISPLAY_FIELDS = {
 			KEY_COM_USER_NAME, KEY_COM_USER_AVATAR, KEY_COM_CONTENT,
-			KEY_COM_DATE };
+			KEY_COM_DATE, KEY_COM_ID };
 
 	public static final int[] COMTHREAD_ACTIVITY_DISPLAY_VIEWS = {
-			R.id.user_name, R.id.avatar, R.id.comment, R.id.date };
+			R.id.user_name, R.id.avatar, R.id.comment, R.id.date, R.id.com_id };
 
 	// Error messages
 	public static final String ERROR_MSG_EXT_APPLICATION = "Error: External application returned with failed result code";

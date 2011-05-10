@@ -46,11 +46,8 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	private int itemId;
 	private ImageController imageController;
 	private DbAdapter dbAdapter;
-
 	private SharedPreferences sharedPrefs;
-
 	private KT_SimpleCursorAdapter cursorAdapter;
-
 	private Animation rotate;
 
 	@Override
@@ -58,22 +55,24 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		super.onCreate(savedInstanceState);
 		dbAdapter = new DbAdapter(this);
 		itemId = getIntent().getIntExtra(KEY_ITEM_ID, 0);
-		setContentView(R.layout.thread_view_layout);
 		imageController = FeedActivity.imageController;
-		addImageAsHeader();
-		loadAnimations();
+		sharedPrefs = getSharedPreferences(SHARED_PREF_FILE, MODE_PRIVATE);
+		rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_indefinately);
 
-		sharedPrefs = getSharedPreferences(LOGIN_SHARED_PREF_FILE, MODE_PRIVATE);
+		// UI setup
+		setContentView(R.layout.thread_view_layout);
+		addImageAsHeader();
+		addCommentForm();
+
+		cursorAdapter = initializeListAdapter();
 
 		if (savedInstanceState == null) {
 			sharedPrefs.edit().putBoolean(KEY_REFRESHING_POSTS, false).commit();
 			refreshThread();
-		}
+		} else
+			((EditText) findViewById(R.id.inputbox))
+					.setText((String) getLastNonConfigurationInstance());
 
-		cursorAdapter = initializeListAdapter();
-		addCommentForm();
-		((EditText) findViewById(R.id.inputbox))
-				.setText((String) getLastNonConfigurationInstance());
 	}
 
 	@Override
@@ -110,30 +109,6 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		return dialog;
 	}
 
-	private void loadAnimations() {
-		rotate = AnimationUtils.loadAnimation(this, R.anim.rotate_indefinately);
-	}
-
-	@Override
-	protected void onStart() {
-		super.onStart();
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-	}
-
-	@Override
-	protected void onPause() {
-		super.onPause();
-	}
-
-	@Override
-	protected void onStop() {
-		super.onStop();
-	}
-
 	@Override
 	public Object onRetainNonConfigurationInstance() {
 		// return super.onRetainNonConfigurationInstance();
@@ -163,6 +138,13 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		default:
 			return super.onOptionsItemSelected(item);
 		}
+	}
+
+	public void onListItemClick(View v) {
+		int comId = Integer.valueOf(((TextView) v.findViewById(R.id.com_id))
+				.getText().toString());
+		Toast.makeText(this, "" + comId, Toast.LENGTH_SHORT).show();
+		// frederics work
 	}
 
 	private void addImageAsHeader() {
@@ -348,7 +330,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 						dbAdapters[0].insertPost(feedItem.post);
 						dbAdapters[0].insertComments(feedItem.comments);
-						
+
 						dbAdapters[0].close();
 						return true;
 					} catch (XmlPullParserException e) {
