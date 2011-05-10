@@ -110,30 +110,23 @@ public class UploadTask extends AsyncTask<KT_UploadMessage, Void, Boolean>
 		if (messageTag == UPLOAD_COMMENT_MESSAGE_TAG) {
 			cThreadActivity.commentPosted(result.booleanValue());
 		} else {
-			String message;
-			if (result)
-				message = "Upload complete!";
-			else
-				message = "Upload failed!";
-
 			final boolean sucessful = result.booleanValue();
-
-			AlertDialog.Builder builder = new AlertDialog.Builder(context);
-			builder.setMessage(message)
-					.setCancelable(true)
-					.setPositiveButton("OK",
-							new DialogInterface.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int id) {
-									dialog.cancel();
-//									if (sucessful) {
-//										uploadActivity
-//												.finishActivityProcedure();
-//									}
-								}
-							});
-			(builder.create()).show();
+			if (sucessful) {
+				uploadActivity.finishActivityProcedure();
+			} else {
+				AlertDialog.Builder builder = new AlertDialog.Builder(context);
+				builder.setMessage("Upload failed!")
+						.setCancelable(true)
+						.setPositiveButton("OK",
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialog,
+											int id) {
+										dialog.cancel();
+									}
+								});
+				(builder.create()).show();
+			}
 		}
 	}
 }

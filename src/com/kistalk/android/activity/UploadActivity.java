@@ -196,8 +196,7 @@ public class UploadActivity extends Activity implements Constant,
 
 	public void finishActivityProcedure() {
 		Intent refreshIntent = new Intent(this, FeedActivity.class);
-		refreshIntent.putExtra(KEY_REFRESH_REQUEST, true);
-		startActivityForResult(refreshIntent, REFRESH_REQUEST);
+		setResult(RESULT_OK, refreshIntent);
 		finish();
 	}
 
