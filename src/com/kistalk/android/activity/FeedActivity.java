@@ -207,7 +207,6 @@ public class FeedActivity extends ListActivity implements Constant {
 		sharedPrefs.edit().remove(ARG_USERNAME).remove(ARG_TOKEN).commit();
 		imageController.clearCache();
 		startLoginActivityForResult();
-
 	}
 
 	/*
@@ -434,6 +433,8 @@ public class FeedActivity extends ListActivity implements Constant {
 		case REQUEST_GET_CAMERA_PIC:
 			if (resultCode == RESULT_OK) {
 				showUploadView(tempFile.toString());
+			} else if (resultCode == RESULT_CANCELED) {
+
 			} else
 				Toast.makeText(this, ERROR_MSG_EXT_APPLICATION,
 						Toast.LENGTH_LONG).show();
@@ -445,7 +446,11 @@ public class FeedActivity extends ListActivity implements Constant {
 					String realPath = getPathFromContentUri(recievedUri);
 					showUploadView(realPath);
 				}
-			}
+			} else if (resultCode == RESULT_CANCELED) {
+
+			} else
+				Toast.makeText(this, ERROR_MSG_EXT_APPLICATION,
+						Toast.LENGTH_LONG).show();
 			break;
 
 		case UPLOAD_REQUEST:

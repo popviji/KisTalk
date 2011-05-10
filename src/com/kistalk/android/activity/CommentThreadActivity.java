@@ -1,14 +1,8 @@
 package com.kistalk.android.activity;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URISyntaxException;
+import java.util.StringTokenizer;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -25,7 +19,6 @@ import com.kistalk.android.util.UploadTask;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -43,7 +36,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.InputMethodManager;
@@ -60,8 +52,11 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	private SharedPreferences sharedPrefs;
 	private KT_SimpleCursorAdapter cursorAdapter;
 	private Animation rotate;
+
 	private EditText inputbox;
 	private String urlToBigImage;
+
+	private CharSequence urlLink = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +89,8 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	protected void onRestoreInstanceState(Bundle state) {
 		super.onRestoreInstanceState(state);
 		inputbox.setText(state.getString(KEY_COMMENT_INPUT_TEXT));
+		urlLink = state.getString("SAVE_URL_LINK");
+
 	}
 
 	@Override
@@ -130,11 +127,18 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		return dialog;
 	}
 
+	// private void startGallery() {
+	// Toast.makeText(CommentThreadActivity.this,
+	// "You have selected big picture", Toast.LENGTH_SHORT).show();
+	// }
+
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putString(KEY_COMMENT_INPUT_TEXT, inputbox.getText()
 				.toString());
+		if (urlLink != null)
+			outState.putString("SAVE_URL_LINK", urlLink.toString());
 	}
 
 	@Override
@@ -168,10 +172,50 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	}
 
 	public void onListItemClick(View v) {
-		int comId = Integer.valueOf(((TextView) v.findViewById(R.id.com_id))
-				.getText().toString());
-		Toast.makeText(this, "" + comId, Toast.LENGTH_SHORT).show();
-		// frederics work
+		TextView commentField = (TextView) v.findViewById(R.id.comment);
+		if (commentField == null)
+			commentField = (TextView) v.findViewById(R.id.description);
+
+		String comment = commentField.getText().toString();
+
+		urlLink = null;
+
+		// Uses it's default field separator, and assumes that fields within the
+		// string are separated by whitespace characters (spaces, tabs, and
+		// carriage-return characters).
+		StringTokenizer stringTokenizer = new StringTokenizer(comment);
+		// CharSequence[] parseOptions = new
+		// CharSequence[stringTokenizer.countTokens()];
+		String stringToken;
+		int index = 0;
+		while (stringTokenizer.hasMoreTokens()) {
+			stringToken = stringTokenizer.nextToken();
+			if (stringToken.matches("(https?|ftp):\\//"
+					+ "[^\\.s]*[\\.][^\\s]*")) {
+				// parseOptions[index] = stringToken.trim();
+				urlLink = stringToken.trim();
+				break;
+			}
+			index++;
+		}
+		if (urlLink != null) {
+
+			CharSequence[] options = { urlLink };
+			AlertDialog.Builder secondBuilder = new AlertDialog.Builder(this);
+			secondBuilder.setTitle("Option Menu").setCancelable(true)
+					.setItems(options, new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int id) {
+							if (0 == id) {
+								Intent webIntent = new Intent(
+										Intent.ACTION_VIEW);
+								webIntent.setData(Uri.parse(urlLink.toString()));
+								startActivity(webIntent);
+							}
+						}
+					});
+			secondBuilder.create().show();
+		}
 	}
 
 	private void addImageAsHeader() {
@@ -284,7 +328,9 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 					@Override
 					public void onClick(View v) {
 						if (v.getId() == R.id.clear_comment_button) {
-							showDialog(DIALOG_CLEAR_COMMENT_FIELD);
+							if (((EditText) findViewById(R.id.inputbox))
+									.getText().length() > 0)
+								showDialog(DIALOG_CLEAR_COMMENT_FIELD);
 						}
 					}
 				});
@@ -295,11 +341,8 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 					@Override
 					public boolean onLongClick(View v) {
-						if (v.getId() == R.id.clear_comment_button) {
-							inputbox.setText("");
-							return true;
-						} else
-							return false;
+						inputbox.setText("");
+						return true;
 					}
 				});
 	}

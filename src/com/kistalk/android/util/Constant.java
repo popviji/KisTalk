@@ -113,6 +113,8 @@ public interface Constant {
 	public static final int DIALOG_CLEAR_COMMENT_FIELD = 7;
 	public static final int DIALOG_CHOOSE_OPTION = 11;
 	public static final int DIALOG_LOGOUT = 13;
+	public static final int DIALOG_GALLERY_OPTION = 17;
+	public static final int DIALOG_PARSED_TEXT_OPTION = 23;
 
 	// Shared preference constant for synchronize threads
 	// The activity gets killed if an user turns his/hers android phone causes
@@ -121,7 +123,6 @@ public interface Constant {
 	public static final String KEY_REFRESHING_POSTS = "KEY_REFRESHING_POSTS";
 
 	// Databse constants
-
 	public static final String[] FEEDACTIVITY_DISPLAY_FIELDS = {
 			KEY_ITEM_USER_NAME, KEY_ITEM_USER_AVATAR, KEY_ITEM_URL_SMALL,
 			KEY_ITEM_DESCRIPTION, KEY_ITEM_DATE, KEY_ITEM_NUM_OF_COMS,
