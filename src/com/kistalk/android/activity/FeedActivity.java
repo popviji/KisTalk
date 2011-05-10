@@ -303,9 +303,8 @@ public class FeedActivity extends ListActivity implements Constant {
 	}
 
 	public void onListItemClick(View v) {
-		SimpleCursorAdapter adapter = (SimpleCursorAdapter) getListAdapter();
-		Cursor cur = adapter.getCursor();
-		int itemId = cur.getInt(cur.getColumnIndex(KEY_ITEM_ID));
+		int itemId = Integer.valueOf(((TextView) v.findViewById(R.id.item_id))
+				.getText().toString());
 		showComments(itemId);
 	}
 
@@ -394,7 +393,6 @@ public class FeedActivity extends ListActivity implements Constant {
 		Intent commentIntent = new Intent(FeedActivity.this,
 				CommentThreadActivity.class);
 		commentIntent.setAction(Intent.ACTION_VIEW);
-		// intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		commentIntent.putExtra(KEY_ITEM_ID, itemId);
 		try {
 			FeedActivity.this.startActivity(commentIntent);
@@ -523,7 +521,8 @@ public class FeedActivity extends ListActivity implements Constant {
 
 		case UPLOAD_REQUEST:
 			if (resultCode == RESULT_OK) {
-				Toast.makeText(this, "Upload sucessful", Toast.LENGTH_LONG).show();
+				Toast.makeText(this, "Upload sucessful", Toast.LENGTH_LONG)
+						.show();
 				refreshLatestPosts();
 			}
 			break;

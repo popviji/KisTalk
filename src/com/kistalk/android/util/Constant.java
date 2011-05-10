@@ -117,11 +117,11 @@ public interface Constant {
 
 	public static final String[] FEEDACTIVITY_DISPLAY_FIELDS = {
 			KEY_ITEM_USER_NAME, KEY_ITEM_USER_AVATAR, KEY_ITEM_URL_SMALL,
-			KEY_ITEM_DESCRIPTION, KEY_ITEM_DATE, KEY_ITEM_NUM_OF_COMS };
+			KEY_ITEM_DESCRIPTION, KEY_ITEM_DATE, KEY_ITEM_NUM_OF_COMS, KEY_ITEM_ID };
 
 	public static final int[] FEEDACTIVITY_DISPLAY_VIEWS = { R.id.user_name,
 			R.id.avatar, R.id.image_small, R.id.description, R.id.date,
-			R.id.num_of_comments };
+			R.id.num_of_comments, R.id.item_id };
 
 	public static final String[] COMTHREAD_ACTIVITY_DISPLAY_FIELDS = {
 			KEY_COM_USER_NAME, KEY_COM_USER_AVATAR, KEY_COM_CONTENT,
