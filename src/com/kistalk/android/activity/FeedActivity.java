@@ -96,7 +96,8 @@ public class FeedActivity extends ListActivity implements Constant {
 		cursorAdapter = (KT_SimpleCursorAdapter) getLastNonConfigurationInstance();
 		if (cursorAdapter == null)
 			cursorAdapter = initializeListAdapter();
-		setListAdapter(cursorAdapter);
+		else
+			setListAdapter(cursorAdapter);
 
 		// If activity starts (and not restarts due to orientation changes)
 		if (savedInstanceState == null) {
@@ -154,7 +155,9 @@ public class FeedActivity extends ListActivity implements Constant {
 				R.layout.feed_item_layout, cur, FEEDACTIVITY_DISPLAY_FIELDS,
 				FEEDACTIVITY_DISPLAY_VIEWS, avatarPlaceholder,
 				imageSmallPlaceholder, null);
-
+		
+		setListAdapter(cursorAdapter);
+		
 		return cursorAdapter;
 
 	}

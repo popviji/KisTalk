@@ -69,13 +69,15 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 		// UI setup
 		setContentView(R.layout.thread_view_layout);
+		findViewById(R.id.upload_button).setVisibility(View.GONE);
 		addImageAsHeader();
 		addCommentForm();
 
 		cursorAdapter = (KT_SimpleCursorAdapter) getLastNonConfigurationInstance();
 		if (cursorAdapter == null)
 			cursorAdapter = initializeListAdapter();
-		setListAdapter(cursorAdapter);
+		else
+			setListAdapter(cursorAdapter);
 
 		// If activity starts (and not restarts due to orientation changes)
 		if (savedInstanceState == null) {
@@ -269,6 +271,8 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 				COMTHREAD_ACTIVITY_DISPLAY_VIEWS, avatarPlaceholder, null,
 				imageBigPlaceholder);
 
+		setListAdapter(cursorAdapter);
+		
 		dbAdapter.close();
 
 		return cursorAdapter;
