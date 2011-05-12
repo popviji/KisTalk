@@ -2,6 +2,7 @@ package com.kistalk.android.activity;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.LinkedList;
 import java.util.StringTokenizer;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -56,8 +57,6 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	private EditText inputbox;
 	private String urlToBigImage;
 
-	private CharSequence urlLink = null;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -91,8 +90,6 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 	protected void onRestoreInstanceState(Bundle state) {
 		super.onRestoreInstanceState(state);
 		inputbox.setText(state.getString(KEY_COMMENT_INPUT_TEXT));
-		urlLink = state.getString("SAVE_URL_LINK");
-
 	}
 
 	@Override
@@ -139,8 +136,6 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 		super.onSaveInstanceState(outState);
 		outState.putString(KEY_COMMENT_INPUT_TEXT, inputbox.getText()
 				.toString());
-		if (urlLink != null)
-			outState.putString("SAVE_URL_LINK", urlLink.toString());
 	}
 
 	@Override
@@ -180,40 +175,37 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 
 		String comment = commentField.getText().toString();
 
-		urlLink = null;
-
 		// Uses it's default field separator, and assumes that fields within the
 		// string are separated by whitespace characters (spaces, tabs, and
 		// carriage-return characters).
 		StringTokenizer stringTokenizer = new StringTokenizer(comment);
-		// CharSequence[] parseOptions = new
-		// CharSequence[stringTokenizer.countTokens()];
+		LinkedList<String> parsedLinks = new LinkedList<String>();
 		String stringToken;
-		int index = 0;
 		while (stringTokenizer.hasMoreTokens()) {
 			stringToken = stringTokenizer.nextToken();
-			if (stringToken.matches("(https?|ftp):\\//"
-					+ "[^\\.s]*[\\.][^\\s]*")) {
-				// parseOptions[index] = stringToken.trim();
-				urlLink = stringToken.trim();
-				break;
+			if (stringToken.matches(REGEXP_URL_LINKS)) {
+				parsedLinks.add(stringToken.trim());
 			}
-			index++;
 		}
-		if (urlLink != null) {
-
-			CharSequence[] options = { urlLink };
+		if (parsedLinks.size() != 0) {
+			String[] tempArray = new String[parsedLinks.size()];
+			int index = 0;
+			int numItems = parsedLinks.size();
+			while(index < numItems) {
+				tempArray[index] = parsedLinks.removeFirst();
+				index++;
+			}
+			
+			final CharSequence[] options = tempArray;
 			AlertDialog.Builder secondBuilder = new AlertDialog.Builder(this);
-			secondBuilder.setTitle("Option Menu").setCancelable(true)
+			secondBuilder.setTitle("URL Links").setCancelable(true)
 					.setItems(options, new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int id) {
-							if (0 == id) {
 								Intent webIntent = new Intent(
 										Intent.ACTION_VIEW);
-								webIntent.setData(Uri.parse(urlLink.toString()));
+								webIntent.setData(Uri.parse(options[id].toString()));
 								startActivity(webIntent);
-							}
 						}
 					});
 			secondBuilder.create().show();
@@ -272,7 +264,7 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 				imageBigPlaceholder);
 
 		setListAdapter(cursorAdapter);
-		
+
 		dbAdapter.close();
 
 		return cursorAdapter;
