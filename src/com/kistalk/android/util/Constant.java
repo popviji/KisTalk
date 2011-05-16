@@ -142,6 +142,6 @@ public interface Constant {
 	// Error messages
 	public static final String ERROR_MSG_EXT_APPLICATION = "Error: External application returned with failed result code";
 
-	// Download
-
+	// Pattern matching
+	public static final String REGEXP_URL_LINKS = "(^|[ \t\r\n])((ftp|http|https):(([A-Za-z0-9$_.+!*(),;/?:@&~=-])|%[A-Fa-f0-9]{2}){2,}(#([a-zA-Z0-9][a-zA-Z0-9$_.+!*(),;/?:@&~=%-]*))?([A-Za-z0-9$_+!*();/?:~-]))";
 }
