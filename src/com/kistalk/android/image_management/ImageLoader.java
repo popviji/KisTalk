@@ -2,13 +2,12 @@ package com.kistalk.android.image_management;
 
 import java.io.IOException;
 
-import com.kistalk.android.R;
-import com.kistalk.android.util.Constant;
-import com.kistalk.android.util.KT_TransferManager;
-
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
+
+import com.kistalk.android.util.Constant;
+import com.kistalk.android.util.KT_TransferManager;
 
 /**
  * An background image loader. If the image to be loaded is present in the

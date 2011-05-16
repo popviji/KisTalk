@@ -2,7 +2,6 @@
 package com.kistalk.android.util;
 
 import java.util.LinkedList;
-import java.util.concurrent.Semaphore;
 
 import android.content.ContentValues;
 import android.content.Context;

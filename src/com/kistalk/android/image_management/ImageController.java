@@ -5,11 +5,10 @@ import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import com.kistalk.android.util.Constant;
-
-import android.net.Uri;
 import android.util.Log;
 import android.widget.ImageView;
+
+import com.kistalk.android.util.Constant;
 
 public class ImageController implements Constant {
 

@@ -25,18 +25,16 @@ import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HTTP;
 
-import com.kistalk.android.activity.FeedActivity;
-import com.kistalk.android.base.KT_UploadMessage;
-
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.Log;
+
+import com.kistalk.android.activity.FeedActivity;
+import com.kistalk.android.base.KT_UploadMessage;
 
 public class KT_TransferManager implements Constant {
 
 	private DefaultHttpClient client;
 	private URL urlObject; // Creates a URL instance
-	private SharedPreferences sp;
 
 	/* Default constructor */
 	public KT_TransferManager() {

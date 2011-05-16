@@ -191,21 +191,20 @@ public class CommentThreadActivity extends ListActivity implements Constant {
 			String[] tempArray = new String[parsedLinks.size()];
 			int index = 0;
 			int numItems = parsedLinks.size();
-			while(index < numItems) {
+			while (index < numItems) {
 				tempArray[index] = parsedLinks.removeFirst();
 				index++;
 			}
-			
+
 			final CharSequence[] options = tempArray;
 			AlertDialog.Builder secondBuilder = new AlertDialog.Builder(this);
 			secondBuilder.setTitle("URL Links").setCancelable(true)
 					.setItems(options, new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int id) {
-								Intent webIntent = new Intent(
-										Intent.ACTION_VIEW);
-								webIntent.setData(Uri.parse(options[id].toString()));
-								startActivity(webIntent);
+							Intent webIntent = new Intent(Intent.ACTION_VIEW);
+							webIntent.setData(Uri.parse(options[id].toString()));
+							startActivity(webIntent);
 						}
 					});
 			secondBuilder.create().show();
